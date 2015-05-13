@@ -37,20 +37,11 @@
 		stockService.initStock();
 
 		// 伝票番号の採番
-		// API実行
-//		stockService.getRecords();
-//		if(stockService.getStatus() == _CONST.OK){
-		if (stockService.getRecords()){
-			// 新規SlipNumberを取得
-			if (stockService.getMaxNumber('SlipNumber',-3)){
-				// 採番したSlipNumberを設定
-				autoSlipNumber  = stockService.getAutoSlipNumber();
-				record['SlipNumber']['value'] = autoSlipNumber;
-			} else {
-				event.error = stockService.getMessage();
-				return event;
-			}
-		}else {
+		if (stockService.getSlipNumber()){
+			// 採番したSlipNumberを設定
+			autoSlipNumber  = stockService.getAutoSlipNumber();
+			record['SlipNumber']['value'] = autoSlipNumber;
+		} else {
 			event.error = stockService.getMessage();
 			return event;
 		}

@@ -50,9 +50,80 @@ StockService.prototype = {
 	getStatus: function() {
 	  return this.status;
 	},
+	
+	// 在庫管理用の伝票番号採番
+	getSlipNumber: function() {
+		
+		if (this._getRecords()){
+			// 新規SlipNumberを取得
+			if (this._getMaxNumber('SlipNumber',-3)){
+				this.message = '伝票番号が取得できました';
+				return true;
+			} else {
+				this.message = '伝票番号が取得できません。';
+				return false;
+			}
+		}else {
+			this.message = '伝票番号が取得できません。';
+			return false;
+		}
+	},
+	getAutoSlipNumber: function() {
+		return 'Z' + getYmd(this.strProcessDate) + ('000' + this.recNo).slice(-3);
+	},
 
-	// 採番
-	getRecords: function() {
+	// データ登録
+	putNyusyutu: function(autoSlipNumber) {
+		// 変数初期化
+		var cntNyusyutu = 0;
+		
+		// 取得
+		if (this._getRecords()){
+			// NyusyutuNumberから初期値を取得
+			if (this._getMaxNumber('NyusyutuNumber' , -5)){
+				// 初期値を取得
+				cntNyusyutu  = this.recNo;
+			} else {
+				this.message = '伝票番号が取得できません。';
+				return false;
+			}
+		}else {
+			this.message = '伝票番号が取得できません。';
+			return false;
+		}
+		
+		// JSONパラメータ作成
+		var queryObj = new Object();
+		queryObj["app"] = _APPID.NYUSYUTU;
+		queryObj["records"] = new Array();
+
+		for (var i = 0; i < this.tableRecords.length; i++) {
+			var partObj = new Object();
+			partObj["NyusyutuNumber"] = {value: this._getAutoNyusyutuNumber(cntNyusyutu)};	// 入出庫番号
+			partObj["NyusyutuDate"] = {value: this.processDate.format("YYYY-MM-DD")};	// 入出庫日
+			partObj["NyusyutuKbn"] = {value: this.record['ProcessKbn']['value']};	// 入出庫区分
+			partObj["SlipNumber"] = {value: autoSlipNumber};						// 伝票番号
+			partObj["SpaceCodeSaki"] = {value: this.record['SpaceCode']['value']};	// 場所コード(先）
+			partObj["ItemCd"] = {value: this.tableRecords[i].value['ItemCd'].value};		// 商品コード
+
+			queryObj["records"].push(partObj);
+			
+			cntNyusyutu++;
+		}
+		
+		if (this._putRecords(queryObj)){
+			this.message = '入出庫履歴が登録されました';
+			return true;
+		} else {
+			this.message = '入出庫履歴の登録が失敗しました';
+			return false;
+		}
+	},
+	_getAutoNyusyutuNumber: function(nyusyutuNo) {
+		return 'N' + getYmd(this.strProcessDate) + ('00000' + nyusyutuNo).slice(-5);
+	},
+	
+	_getRecords: function() {
 		var xmlHttp = new XMLHttpRequest();
 		// 同期リクエストを行う
 		xmlHttp.open("GET", this.apiUrl, false);
@@ -74,24 +145,8 @@ StockService.prototype = {
 			this.message = 'コードが取得できません。';
 			return false;
 		}
-		// この記載方法だと同期が取れない・・・
-//		kintone.api(
-//			kintone.api.url('/k/v1/records', true),
-//			'GET', {
-//				app: kintone.app.getId(),
-//				query: this.query
-//			},
-//			function(resp) {
-//					this.status = _CONST.OK;
-//					this.jsonObj = resp;
-//			},
-//			function(resp) {
-//				this.status = _CONST.ERROR;
-//				this.message = 'コードが取得できません。';
-//			}
-//		)		
 	},
-	getMaxNumber: function(keyVal , cutNum) {
+	_getMaxNumber: function(keyVal , cutNum) {
 		var obj = JSON.parse(this.jsonObj);
 		if (obj.records[0] != null){
 			try{
@@ -113,69 +168,32 @@ StockService.prototype = {
 		}
 		return true;
 	},
-	getAutoSlipNumber: function() {
-		return 'Z' + getYmd(this.strProcessDate) + ('000' + this.recNo).slice(-3);
-	},
-
-	// データ登録
-	putNyusyutu: function(autoSlipNumber) {
-		// 変数初期化
-		var cntNyusyutu = 0;
+	_putRecords: function(param) {
+		// CSRFトークンの取得
+		var token = kintone.getRequestToken();
+		param["__REQUEST_TOKEN__"] = token; 
 		
-		// 取得
-		if (this.getRecords()){
-			// NyusyutuNumberから初期値を取得
-			if (this.getMaxNumber('NyusyutuNumber' , -5)){
-				// 初期値を取得
-				cntNyusyutu  = this.recNo;
+		var xmlHttp = new XMLHttpRequest();
+		// 同期リクエストを行う
+		xmlHttp.open("POST", kintone.api.url('/k/v1/records'), false);
+		xmlHttp.setRequestHeader('Content-Type', 'application/json');
+		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+		xmlHttp.send(JSON.stringify(param));
+		
+		if (xmlHttp.status == 200){
+			if(window.JSON){
+				this.status = _CONST.OK;
+				this.jsonObj = xmlHttp.responseText;
+				return true;
 			} else {
-				this.message = '伝票番号が取得できません。';
+				this.status = _CONST.WARNING;
+				this.message = xmlHttp.statusText;
 				return false;
 			}
-		}else {
-			this.message = '伝票番号が取得できません。';
+		} else {
+			this.status = _CONST.ERROR;
+			this.message = '登録に失敗しました。';
 			return false;
 		}
-		
-		// JSONパラメータ作成
-		var queryObj = new Object();
-		queryObj["app"] = _APPID.NYUSYUTU;
-		queryObj["records"] = new Array();
-
-		for (var i = 0; i < this.tableRecords.length; i++) {
-			var partObj = new Object();
-			partObj["NyusyutuNumber"] = {value: this.getAutoNyusyutuNumber(cntNyusyutu)};	// 入出庫番号
-			partObj["NyusyutuDate"] = {value: this.processDate.format("YYYY-MM-DD")};	// 入出庫日
-			partObj["NyusyutuKbn"] = {value: this.record['ProcessKbn']['value']};	// 入出庫区分
-			partObj["SlipNumber"] = {value: autoSlipNumber};						// 伝票番号
-			partObj["SpaceCodeSaki"] = {value: this.record['SpaceCode']['value']};	// 場所コード(先）
-			partObj["ItemCd"] = {value: this.tableRecords[i].value['ItemCd'].value};		// 商品コード
-
-			queryObj["records"].push(partObj);
-			
-			cntNyusyutu++;
-		}
-
-		localStorage.setItem('queryObj', JSON.stringify(queryObj));
-		var addparams = JSON.parse(localStorage.getItem('queryObj'));
-		
-		// API実行
-		kintone.api(
-			kintone.api.url('/k/v1/records',true),
-			'POST' ,
-			addparams , 
-			function(resp) {
-				this.message = '入出庫履歴が登録されました';
-				return true;
-			}, 
-			function(resp) {
-				this.message = '入出庫履歴の登録が失敗しました';
-				return false;
-			}
-		); 
-		
-	},
-	getAutoNyusyutuNumber: function(nyusyutuNo) {
-		return 'N' + getYmd(this.strProcessDate) + ('00000' + nyusyutuNo).slice(-5);
 	}
 }
