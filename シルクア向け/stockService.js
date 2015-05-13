@@ -9,6 +9,7 @@ StockService.prototype = {
 		// 初期化
 		this.status = "";
 		this.message = "";
+		this.keyVal = "";
 
 		this.record = record;
 		this.tableRecords = record['TABEL']['value'];
@@ -23,7 +24,9 @@ StockService.prototype = {
 		this.endDate = moment(new Date(this.processDate.year() , this.processDate.month() + 1 , '1'));
 	},
 	
-	// 在庫管理-伝票番号 の 採番用
+	/***************************************/
+	/* 在庫管理-伝票番号 の 採番用初期処理 */
+	/***************************************/
 	initStock: function() {
 		// 初期化
 		this.recNo = 1;
@@ -33,7 +36,9 @@ StockService.prototype = {
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
 	},
 	
-	// 入出庫履歴 の 登録用
+	/***************************************/
+	/* 入出庫履歴 の 登録用初期処理        */
+	/***************************************/
 	initNyuSyutu: function() {
 		// 初期化
 		this.recNo = 1;
@@ -42,8 +47,20 @@ StockService.prototype = {
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.NYUSYUTU + '&query=' + encodeURI(this.query);
 	},
+	/***************************************/
+	/* 商品更新用初期処理                  */
+	/***************************************/
+	_initItemUpdate: function(updateItemCd) {
+		// 初期化
+		// クリエリー作成
+		this.query = 'ItemCd = "' + updateItemCd + '" limit 1';
+		// API用URL作成
+		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.ITEM + '&query=' + encodeURI(this.query);
+	},
 	
-	// getter
+	/***************************************/
+	/* getter                              */
+	/***************************************/
 	getMessage: function() {
 	  return this.message;
 	},
@@ -51,7 +68,9 @@ StockService.prototype = {
 	  return this.status;
 	},
 	
-	// 在庫管理用の伝票番号採番
+	/***************************************/
+	/* 在庫管理用の伝票番号採番            */
+	/***************************************/
 	getSlipNumber: function() {
 		
 		if (this._getRecords()){
@@ -72,8 +91,10 @@ StockService.prototype = {
 		return 'Z' + getYmd(this.strProcessDate) + ('000' + this.recNo).slice(-3);
 	},
 
-	// データ登録
-	putNyusyutu: function(autoSlipNumber) {
+	/***************************************/
+	/* 入出庫履歴の登録                    */
+	/***************************************/
+	postNyusyutu: function(autoSlipNumber) {
 		// 変数初期化
 		var cntNyusyutu = 0;
 		
@@ -111,7 +132,7 @@ StockService.prototype = {
 			cntNyusyutu++;
 		}
 		
-		if (this._putRecords(queryObj)){
+		if (this._postRecords(queryObj)){
 			this.message = '入出庫履歴が登録されました';
 			return true;
 		} else {
@@ -168,7 +189,27 @@ StockService.prototype = {
 		}
 		return true;
 	},
-	_putRecords: function(param) {
+	_getKeyVal: function(keyVal) {
+		var obj = JSON.parse(this.jsonObj);
+		if (obj.records[0] != null){
+			try{
+				for ( var keyA in obj.records ) {
+					for ( var keyB in obj.records[keyA] ) {
+						if (keyB == keyVal){
+							this.keyVal = obj.records[keyA][keyB].value;
+						}
+					}
+				}
+			} catch(e){
+				this.message = '情報が取得できません。';
+				return false;
+			}
+		} else {
+			this.keyVal = ''
+		}
+		return true;
+	},
+	_postRecords: function(param) {
 		// CSRFトークンの取得
 		var token = kintone.getRequestToken();
 		param["__REQUEST_TOKEN__"] = token; 
@@ -195,5 +236,79 @@ StockService.prototype = {
 			this.message = '登録に失敗しました。';
 			return false;
 		}
-	}
+	},
+		
+	/***************************************/
+	/* 商品の更新                          */
+	/***************************************/
+	putNyusyutu: function() {
+		// 変数初期化
+		for (var i = 0; i < this.tableRecords.length; i++) {
+			var updateItemCd = this.tableRecords[i].value['ItemCd'].value;
+			var itemCdId = null;
+			// 商品コードで初期化
+			this._initItemUpdate(updateItemCd);
+			
+			// 対象商品の$idを取得
+			if (this._getRecords()){
+				if (this._getKeyVal('$id')){
+					itemCdId = this.keyVal
+				} else {
+					this.message = '対象商品がが得できません。';
+					return false;
+				}
+			} else {
+				this.message = '対象商品がが得できません。';
+				return false;
+			}
+			
+			// 更新用パラメータを作成
+			var queryObj = new Object();
+			queryObj["app"] = _APPID.ITEM;
+			queryObj["id"] = itemCdId;
+			
+			var partObj = new Object();
+			queryObj["record"] = partObj;
+
+			partObj["SpaceLookUp"] = {value: this.record['SpaceCode']['value']};	// 場所コード
+			partObj["SpaceName"] = {value: this.record['SpaceName']['value']};	// 場所名
+
+			// 更新実行
+			if (this._putRecords(queryObj)){
+				this.message = '商品マスタが更新されました';
+			} else {
+				this.message = '商品マスタの更新が失敗しました';
+				return false;
+			}
+		}
+		return true;
+	},
+	_putRecords: function(param) {
+		// CSRFトークンの取得
+		var token = kintone.getRequestToken();
+		param["__REQUEST_TOKEN__"] = token; 
+alert(JSON.stringify(param));
+		var xmlHttp = new XMLHttpRequest();
+		// 同期リクエストを行う
+		xmlHttp.open("PUT", kintone.api.url('/k/v1/record'), false);
+		xmlHttp.setRequestHeader('Content-Type', 'application/json');
+		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+		xmlHttp.send(JSON.stringify(param));
+		
+		if (xmlHttp.status == 200){
+			if(window.JSON){
+				this.status = _CONST.OK;
+				this.jsonObj = xmlHttp.responseText;
+				return true;
+			} else {
+				this.status = _CONST.WARNING;
+				this.message = xmlHttp.statusText;
+				return false;
+			}
+		} else {
+			this.status = _CONST.ERROR;
+			this.message = '登録に失敗しました。';
+			return false;
+		}
+	},
 }

@@ -48,7 +48,13 @@
 		
 		// 入出庫履歴の登録
 		stockService.initNyuSyutu();
-		if (! stockService.putNyusyutu(autoSlipNumber)){
+		if (! stockService.postNyusyutu(autoSlipNumber)){
+			event.error = stockService.getMessage();
+			return event;
+		};
+		
+		// 商品マスタの更新
+		if (! stockService.putNyusyutu()){
 			event.error = stockService.getMessage();
 			return event;
 		};

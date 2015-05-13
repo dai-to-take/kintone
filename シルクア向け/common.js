@@ -7,6 +7,7 @@ var _CONST = {
 Object.freeze(_CONST);
 
 var _APPID = {
+  'ITEM': 15,
   'NYUSYUTU': 41
 };
 Object.freeze(_APPID);
