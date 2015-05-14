@@ -111,12 +111,36 @@
 		return event;
 	});
 	*/
+	  
+    kintone.events.on('app.record.detail.show', function (event) {
+        // メニュ右側の空白部分にボタンを設置
+    	var record = event.record;
+        var myIndexButton = document.createElement('button');
+        myIndexButton.id = 'my_index_button';
+        myIndexButton.innerHTML = 'ルックアップ値更新';
+        myIndexButton.onclick = function () {
+		 	//アプリID
+		 	var appId_nyusyutu = 47;
+		 	var appId_zaiko = 45;
+		 	var appId_item = 56;
+
+        	var rec = kintone.app.record.get();
+        	var record = rec.record;
+			var spaceService = new SpaceService(record);
+			
+			spaceService.putRecords(appId_nyusyutu);
+			spaceService.putRecords(appId_zaiko);
+			spaceService.putRecords(appId_item);
+        }
+        kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+    });
 	
+	/*
 	// 保存ボタン押下、保存実行前イベント
 	// 商品名変更時に自動反映
 	var eventsPushButton = [
 				'app.record.index.edit.submit',
-				'app.record.edit.submit',
+				'app.record.edit.submit'
 				];
 				
 	kintone.events.on(eventsPushButton, function(event) {
@@ -129,24 +153,12 @@
         var record = event.record;
 		var spaceService = new SpaceService(record);
 		
-		var nyusyutuRecords = spaceService.putNyusyutuRecords();
-		var zaikoRecords = spaceService.putZaikoRecords();
-		var itemRecords = spaceService.putItemRecords();
-		alert(nyusyutuRecords.length);
-		alert(zaikoRecords.length);
-		alert(itemRecords.length);
-		
-		if(itemRecords.length >= 0) {
-			spaceService.updateLookup(appId_item, itemRecords);
-		}
-		if(zaikoRecords.length >= 0) {
-			spaceService.updateLookup(appId_zaiko, zaikoRecords);
-		}
-		if(nyusyutuRecords.length >= 0) {
-			spaceService.updateLookup(appId_nyusyutu, nyusyutuRecords);
-		}
+		spaceService.putRecords(appId_nyusyutu);
+		spaceService.putRecords(appId_zaiko);
+		spaceService.putRecords(appId_item);
 		
 		return event;
 	});	
+	*/
 	
 })();

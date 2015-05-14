@@ -24,8 +24,8 @@
 	// レコード追加画面の保存前処理
 	// 伝票番号の採番
 	var eventAdd = [
-				'app.record.detail.show'
-//				'app.record.create.submit'
+//				'app.record.detail.show'
+				'app.record.create.submit'
 				];
 
 	kintone.events.on(eventAdd, function(event) {
@@ -34,26 +34,31 @@
 
 		// サービス初期化
 		var stockService = new StockService(record);
-		
+		stockService.initStock();
+
 		// 伝票番号の採番
-		// API実行
-//		stockService.getRecords();
-//		if(stockService.getStatus() == _CONST.OK){
-		if (stockService.getRecords()){
-			// 新規SlipNumberを取得
-			if (stockService.getSlipNumber('SlipNumber')){
-				// 採番したSlipNumberを設定
-				autoSlipNumber  = stockService.getAutoSlipNumber();
-				record['SlipNumber']['value'] = autoSlipNumber;
-			} else {
-				event.error = stockService.getMessage();
-			}
-		}else {
+		if (stockService.getSlipNumber()){
+			// 採番したSlipNumberを設定
+			autoSlipNumber  = stockService.getAutoSlipNumber();
+			record['SlipNumber']['value'] = autoSlipNumber;
+		} else {
 			event.error = stockService.getMessage();
+			return event;
 		}
 		
-		stockService.putNyusyutu(autoSlipNumber);
-	
+		// 入出庫履歴の登録
+		stockService.initNyuSyutu();
+		if (! stockService.postNyusyutu(autoSlipNumber)){
+			event.error = stockService.getMessage();
+			return event;
+		};
+		
+		// 商品マスタの更新
+		if (! stockService.putNyusyutu()){
+			event.error = stockService.getMessage();
+			return event;
+		};
+
 		return event;
 	});
 	

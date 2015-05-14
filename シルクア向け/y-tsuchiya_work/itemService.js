@@ -83,20 +83,80 @@ ItemService.prototype.getMessage = function() {
   return this.message;
 };
 
-ItemService.prototype.createPutRecords = function(records) {
-    var putRecords = [];
+ItemService.prototype.putRecords = function(appId) {
+
+	//アプリID
+ 	var appId_nyusyutu = 47;
+ 	var appId_zaiko = 45;
+	//商品コード(画面)
+	var strItemCd = this.record['ItemCd']['value'];
+	
+	//場所コードが一致する全てのレコードを更新する。
+	var offset = 0;
+	var records = new Array();
+	var loopendflg = false;
+	
+	while(!loopendflg){
+		if(appId == appId_nyusyutu) {
+		  var query = encodeURIComponent('ItemCd = "' + strItemCd + '" order by レコード番号 asc limit 100 offset ' + offset);
+		  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + query;
+		} else {
+		  var query = encodeURIComponent('ItemCd in ("' + strItemCd + '") order by レコード番号 asc limit 100 offset ' + offset);
+		  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + query;
+		}
+	 
+	  // 同期リクエストを行う
+	  var xmlHttp = new XMLHttpRequest();
+	  xmlHttp.open("GET", appUrl, false);
+	  xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+	  xmlHttp.send(null);
+	 
+	  //取得したレコードをArrayに格納
+	  var respdata = JSON.parse(xmlHttp.responseText);
+	  if(respdata.records.length > 0){
+	    for(var i = 0; respdata.records.length > i; i++){
+	      records.push(respdata.records[i]);
+	    }
+	    offset += respdata.records.length;
+	  }else{
+	    loopendflg = true;
+	  }
+	}
+	
+	var queryObj = new Object();
+	queryObj["app"] = appId;
+	queryObj["records"] = new Array();
+	
     for (var i = 0, l = records.length; i < l; i++) {
-        var record = records[i];
-        putRecords[i] = {
-            id: record['$id'].value,
-            record: {
-                ItemCd: {
-                    value: this.record['ItemCd']['value']
-                }
-            }
-        };
+    	var record = records[i];
+    	var partObj = new Object();
+    	partObj["id"] = record['$id'].value;
+    	partObj["record"] = new Array();
+    	if(appId == appId_nyusyutu) {
+    		partObj["record"] = {ItemCd:{value:this.record['ItemCd']['value']}};
+    	} else {
+    		var ItemTable = new Array();
+    		ItemTable = record['ItemTable']['value'];
+    		var tableValueObj = new Object();
+    		tableValueObj["value"] = new Array();
+    		for (var j = 0; j < ItemTable.length; j++){
+    			var tableValue = ItemTable[j].value;
+    			var tablePartObj = new Object();
+    			tablePartObj["value"] = {{id:tableValue.id},{value:{ItemCd:{{value:tableValue['ItemCd']['value']}},{ItemName:{value:tableValue['ItemName']['value']}}}};
+    			tableValueObj["value"].push(tablePartObj["value"]);
+    		}
+    		partObj["record"] = {ItemTable:{value:tableValueObj["value"]}};
+    		
+    		//var testString = record['ItemTable']['value'][0]['value']['ItemCd']['value'];
+    		//alert(testString);
+    		//partObj["record"] = {ItemCd:{value:this.record['ItemCd']['value']}};
+    	}
+		queryObj["records"].push(partObj);
     }
-    return putRecords;
+	
+	if(records.length > 0){
+		this.updateLookup(appId,queryObj);
+	}
 };
  
     /**
@@ -105,15 +165,26 @@ ItemService.prototype.createPutRecords = function(records) {
      * @param records 一括更新するrecordsデータ
      */
  
-ItemService.prototype.updateLookup = function(appId, records) {
-    kintone.api(
-        kintone.api.url('/k/v1/records', true),
-        'PUT', {
-            app: appId,
-            records: records
-        },
-        function(resp) {
-            alert('ルックアップの更新が完了しました!');
-        }
-    )
+ItemService.prototype.updateLookup = function(appId, queryObj) {
+	
+	var putparams = queryObj;
+
+	var appUrl = kintone.api.url('/k/v1/records');
+	// CSRFトークンの取得
+	var token = kintone.getRequestToken();
+	putparams["__REQUEST_TOKEN__"] = token; 
+	
+	// 同期リクエストを行う
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.open('PUT', appUrl, false);
+	xmlHttp.setRequestHeader('Content-Type', 'application/json');
+	xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+	alert(JSON.stringify(putparams));
+	xmlHttp.send(JSON.stringify(putparams));
+	if (xmlHttp.status == 200){
+		var obj = JSON.parse(xmlHttp.responseText);
+		alert(xmlHttp.status + '：更新に成功しました。');
+	} else {
+		alert(xmlHttp.status + '：更新エラー');
+	}
 };

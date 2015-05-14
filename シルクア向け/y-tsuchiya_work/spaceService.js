@@ -75,120 +75,31 @@ SpaceService.prototype.getMessage = function() {
   return this.message;
 };
 
-SpaceService.prototype.putNyusyutuRecords = function() {
-	
-	//アプリID
-	var appId_nyusyutu = 47;
-	//場所コード(画面)
-	var strSpaceCode = this.record['SpaceCode']['value'];
-	
-	//入出庫管理の場所コードが一致する全てのレコードを更新する。
-	var offset = 0;
-	var records = new Array();
-	var loopendflg = false;
-	
-	while(!loopendflg){
-	  var query = encodeURIComponent('SpaceCodeSaki = "' + strSpaceCode + '" order by レコード番号 asc limit 100 offset ' + offset);
-	  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId_nyusyutu + '&query=' + query;
-	 
-	  // 同期リクエストを行う
-	  var xmlHttp = new XMLHttpRequest();
-	  xmlHttp.open("GET", appUrl, false);
-	  xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-	  xmlHttp.send(null);
-	 
-	  //取得したレコードをArrayに格納
-	  var respdata = JSON.parse(xmlHttp.responseText);
-	  if(respdata.records.length > 0){
-	    for(var i = 0; respdata.records.length > i; i++){
-	      records.push(respdata.records[i]);
-	    }
-	    offset += respdata.records.length;
-	  }else{
-	    loopendflg = true;
-	  }
-	}
-	
-    var putRecords = [];
-	
-    for (var i = 0, l = records.length; i < l; i++) {
-        var record = records[i];
-        putRecords[i] = {
-            id: record['$id'].value,
-            record: {
-                SpaceCodeSaki: {
-                    value: this.record['SpaceCode']['value']
-                }
-            }
-        };
-    }
-    return putRecords;
-};
+SpaceService.prototype.putRecords = function(appId) {
 
-SpaceService.prototype.putZaikoRecords = function() {
-	
 	//アプリID
-	var appId_zaiko = 45;
+ 	var appId_nyusyutu = 47;
+ 	var appId_zaiko = 45;
+ 	var appId_item = 56;	
 	//場所コード(画面)
 	var strSpaceCode = this.record['SpaceCode']['value'];
 	
-	//入出庫管理の場所コードが一致する全てのレコードを更新する。
+	//場所コードが一致する全てのレコードを更新する。
 	var offset = 0;
 	var records = new Array();
 	var loopendflg = false;
 	
 	while(!loopendflg){
-	  var query = encodeURIComponent('SpaceCode = "' + strSpaceCode + '" order by レコード番号 asc limit 100 offset ' + offset);
-	  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId_zaiko + '&query=' + query;
-	 
-	  // 同期リクエストを行う
-	  var xmlHttp = new XMLHttpRequest();
-	  xmlHttp.open("GET", appUrl, false);
-	  xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-	  xmlHttp.send(null);
-	 
-	  //取得したレコードをArrayに格納
-	  var respdata = JSON.parse(xmlHttp.responseText);
-	  if(respdata.records.length > 0){
-	    for(var i = 0; respdata.records.length > i; i++){
-	      records.push(respdata.records[i]);
-	    }
-	    offset += respdata.records.length;
-	  }else{
-	    loopendflg = true;
-	  }
-	}
-    var putRecords = [];
-	
-    for (var i = 0, l = records.length; i < l; i++) {
-        var record = records[i];
-        putRecords[i] = {
-            id: record['$id'].value,
-            record: {
-                SpaceCode: {
-                    value: this.record['SpaceCode']['value']
-                }
-            }
-        };
-    }
-    return putRecords;
-};
-
-SpaceService.prototype.putItemRecords = function() {
-	
-	//アプリID
-	var appId_item = 56;
-	//場所コード(画面)
-	var strSpaceCode = this.record['SpaceCode']['value'];
-	
-	//入出庫管理の場所コードが一致する全てのレコードを更新する。
-	var offset = 0;
-	var records = new Array();
-	var loopendflg = false;
-	
-	while(!loopendflg){
-	  var query = encodeURIComponent('SpaceLookUp = "' + strSpaceCode + '" order by レコード番号 asc limit 100 offset ' + offset);
-	  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId_item + '&query=' + query;
+		if(appId == appId_nyusyutu) {
+		  var query = encodeURIComponent('SpaceCodeSaki = "' + strSpaceCode + '" order by レコード番号 asc limit 100 offset ' + offset);
+		  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + query;
+		} else if(appId == appId_zaiko) {
+		  var query = encodeURIComponent('SpaceCode = "' + strSpaceCode + '" order by レコード番号 asc limit 100 offset ' + offset);
+		  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + query;
+		} else {
+		  var query = encodeURIComponent('SpaceLookUp = "' + strSpaceCode + '" order by レコード番号 asc limit 100 offset ' + offset);
+		  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + query;
+		}
 	 
 	  // 同期リクエストを行う
 	  var xmlHttp = new XMLHttpRequest();
@@ -208,38 +119,49 @@ SpaceService.prototype.putItemRecords = function() {
 	  }
 	}
 	
-    var putRecords = [];
+	var queryObj = new Object();
+	queryObj["app"] = appId;
+	queryObj["records"] = new Array();
 	
     for (var i = 0, l = records.length; i < l; i++) {
-        var record = records[i];
-        putRecords[i] = {
-            id: record['$id'].value,
-            record: {
-                SpaceLookUp: {
-                    value: this.record['SpaceCode']['value']
-                }
-            }
-        };
+    	var record = records[i];
+    	var partObj = new Object();
+    	partObj["id"] = record['$id'].value;
+    	partObj["record"] = new Array();
+    	if(appId == appId_nyusyutu) {
+    		partObj["record"] = {SpaceCodeSaki:{value:this.record['SpaceCode']['value']}};
+    	} else if (appId == appId_zaiko) {
+    		partObj["record"] = {SpaceCode:{value:this.record['SpaceCode']['value']}};
+    	} else {
+    		partObj["record"] = {SpaceLookUp:{value:this.record['SpaceCode']['value']}};
+    	}
+		queryObj["records"].push(partObj);
     }
-    return putRecords;
+	
+	if(records.length > 0){
+		this.updateLookup(appId,queryObj);
+	}
 };
  
-    /**
-     * ルックアップを一括更新する関数
-     * @param appId ルックアップの更新を行うアプリID
-     * @param records 一括更新するrecordsデータ
-     */
- 
-SpaceService.prototype.updateLookup = function(appId, records) {
+SpaceService.prototype.updateLookup = function(appId, queryObj) {
+	
+	var putparams = queryObj;
 
-    kintone.api(
-        kintone.api.url('/k/v1/records', true),
-        'PUT', {
-            app: appId,
-            records: records
-        },
-        function(resp) {
-            alert('ルックアップの更新が完了しました!');
-        }
-    )
+	var appUrl = kintone.api.url('/k/v1/records');
+	// CSRFトークンの取得
+	var token = kintone.getRequestToken();
+	putparams["__REQUEST_TOKEN__"] = token; 
+	
+	// 同期リクエストを行う
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.open('PUT', appUrl, false);
+	xmlHttp.setRequestHeader('Content-Type', 'application/json');
+	xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+	xmlHttp.send(JSON.stringify(putparams));
+	if (xmlHttp.status == 200){
+		var obj = JSON.parse(xmlHttp.responseText);
+		alert(xmlHttp.status + '：更新に成功しました。');
+	} else {
+		alert(xmlHttp.status + '：更新エラー');
+	}
 };

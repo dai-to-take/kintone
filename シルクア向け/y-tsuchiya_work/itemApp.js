@@ -2,6 +2,7 @@
 (function() {
 	'use strict';
 
+	/*
 	var events = [
 				'app.record.detail.show',
 				'app.record.create.show',
@@ -26,6 +27,7 @@
 		}
 		
 	});
+	*/
 
 	// レコード追加、編集画面の表示前処理
 	// 商品コードのdisabled化
@@ -46,6 +48,7 @@
 		return event;
 	});
 
+	/*
 	// レコード追加、編集画面の表示前処理
 	// 産地と形状のdisabled化
 	var eventsEdit = [
@@ -90,7 +93,31 @@
 
 		return event;
 	});
+	*/
 	
+    kintone.events.on('app.record.detail.show', function (event) {
+        // メニュ右側の空白部分にボタンを設置
+        var myIndexButton = document.createElement('button');
+        myIndexButton.id = 'my_index_button';
+        myIndexButton.innerHTML = 'ルックアップ値更新';
+        myIndexButton.onclick = function () {
+		 	//アプリID
+		 	var appId_nyusyutu = 47;
+		 	var appId_zaiko = 45;
+
+        	var rec = kintone.app.record.get();
+        	var record = rec.record;
+        	alert(record['ItemCd']['value']);
+			var itemService = new ItemService(record);
+			
+			//itemService.putRecords(appId_nyusyutu);
+			itemService.putRecords(appId_zaiko);
+        }
+        kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+    });	
+	
+	
+	/*
 	// 保存ボタン押下、保存実行前イベント
 	// 商品名変更時に自動反映
 	var eventsPushButton = [
@@ -99,64 +126,18 @@
 				];
 				
 	kintone.events.on(eventsPushButton, function(event) {
-	
-        var record = event.record;
-		//アプリID
-		var appId_nyusyutu = 47;
-		var appId_zaiko = 45;
 		
-		//商品コード(画面)
-		var strItemCd = record['ItemCd']['value'];
+	 	//アプリID
+	 	var appId_nyusyutu = 47;
+	 	var appId_zaiko = 45;
+		
+        var record = event.record;
 		var itemService = new ItemService(record);
 		
-		//入出庫管理の商品コードが一致する全てのレコードを更新する。
-		var offset = 0;
-		var records = new Array();
-		var loopendflg = false;
-		
-		while(!loopendflg){
-		  var query = encodeURIComponent('ItemCd = "' + strItemCd + '" order by レコード番号 asc limit 100 offset ' + offset);
-		  var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId_nyusyutu + '&query=' + query;
-		 
-		  // 同期リクエストを行う
-		  var xmlHttp = new XMLHttpRequest();
-		  xmlHttp.open("GET", appUrl, false);
-		  xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-		  xmlHttp.send(null);
-		 
-		  //取得したレコードをArrayに格納
-		  var respdata = JSON.parse(xmlHttp.responseText);
-		  if(respdata.records.length > 0){
-		    for(var i = 0; respdata.records.length > i; i++){
-		      records.push(respdata.records[i]);
-		    }
-		    offset += respdata.records.length;
-		  }else{
-		    loopendflg = true;
-		  }
-		}
-		
-		itemService.updateLookup(appId_nyusyutu, itemService.createPutRecords(records));
-		//入出庫管理ここまで
-		
-		//在庫管理 テーブルの更新がまだできていない。
-		/*
-        // レコードの一括取得(100件まで)
-        kintone.api(
-            kintone.api.url('/k/v1/records', true),
-            'GET', {
-                app: appId_nyusyutu,
-                query: 'ItemCd = "' + strItemCd + '"'
-            },
-            function(resp) {
-                var records = resp.records;
-                // ルックアップの更新
-                itemService.updateLookup(appId_nyusyutu, itemService.createPutRecords(records));
-            }
-        );
-		*/
+		itemService.putRecords(appId_nyusyutu);
+		//itemService.putRecords(appId_zaiko);
 		
 		return event;
 	});
-	
+	*/
 })();
