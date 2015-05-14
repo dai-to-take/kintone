@@ -2,6 +2,11 @@
 (function() {
 	'use strict';
 
+	kintone.events.on(['app.record.index.show'], function (event) {
+		var query= kintone.app.getQuery();
+		console.log(query);
+	});
+	
 	// レコード追加、編集画面の表示前処理
 	// 商品コードのdisabled化
 	var eventsShow = [

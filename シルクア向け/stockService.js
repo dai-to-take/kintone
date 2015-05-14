@@ -48,7 +48,7 @@ StockService.prototype = {
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.NYUSYUTU + '&query=' + encodeURI(this.query);
 	},
 	/***************************************/
-	/* 商品更新用初期処理                  */
+	/* 商品ID取得用初期処理                  */
 	/***************************************/
 	_initItemUpdate: function(updateItemCd) {
 		// 初期化
@@ -56,6 +56,16 @@ StockService.prototype = {
 		this.query = 'ItemCd = "' + updateItemCd + '" limit 1';
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.ITEM + '&query=' + encodeURI(this.query);
+	},
+	/***************************************/
+	/* 更新チェック用初期処理                  */
+	/***************************************/
+	_initItemCheck: function(updateItemCd) {
+		// 初期化
+		// クリエリー作成
+		this.query = 'ItemCd in ("' + updateItemCd + '") and ProcessDate > "' + this.processDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
+		// API用URL作成
+		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
 	},
 	
 	/***************************************/
@@ -237,6 +247,14 @@ StockService.prototype = {
 			return false;
 		}
 	},
+	_isExistence: function() {
+		var obj = JSON.parse(this.jsonObj);
+		if (obj.records[0] != null){
+			return true;
+		} else {
+			return false;
+		}
+	},
 		
 	/***************************************/
 	/* 商品の更新                          */
@@ -246,9 +264,23 @@ StockService.prototype = {
 		for (var i = 0; i < this.tableRecords.length; i++) {
 			var updateItemCd = this.tableRecords[i].value['ItemCd'].value;
 			var itemCdId = null;
-			// 商品コードで初期化
-			this._initItemUpdate(updateItemCd);
 			
+			// 商品チェック
+			this._initItemCheck(updateItemCd);
+			// 今回の処理日より未来での変更があるか？
+			if (this._getRecords()){
+				if (this._isExistence()){
+					// 存在する場合は次の商品へ
+					continue;
+				}
+			} else {
+				this.message = '商品チェックが失敗しました。';
+				return false;
+			}
+
+			
+			// 商品ID取得用で初期化
+			this._initItemUpdate(updateItemCd);
 			// 対象商品の$idを取得
 			if (this._getRecords()){
 				if (this._getKeyVal('$id')){
@@ -287,7 +319,7 @@ StockService.prototype = {
 		// CSRFトークンの取得
 		var token = kintone.getRequestToken();
 		param["__REQUEST_TOKEN__"] = token; 
-alert(JSON.stringify(param));
+
 		var xmlHttp = new XMLHttpRequest();
 		// 同期リクエストを行う
 		xmlHttp.open("PUT", kintone.api.url('/k/v1/record'), false);
