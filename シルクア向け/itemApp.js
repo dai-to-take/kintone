@@ -73,22 +73,38 @@
 		
 		// サービス初期化
 		var itemService = new ItemService(record);
-		itemService.initialize();
+		itemService.initItem();
 		
 		// API実行
-		if (itemService.getRecords()){
-			// 新規ItemCdを取得
-			if (itemService.getItemCd('ItemCd')){
-				// 採番したItemCdを設定
-				record['ItemCd']['value'] = itemService.getAutoItemCd();
-			} else {
-				event.error = itemService.getMessage();
-			}
+		if (itemService.getItemCd()){
+			// 採番したItemCdを設定
+			record['ItemCd']['value'] = itemService.getAutoItemCd();
 		}else {
 			event.error = itemService.getMessage();
 		}
 
 		return event;
 	});
+	
+	// メンテナンス用の機能
+    kintone.events.on('app.record.detail.show', function (event) {
+        // メニュ右側の空白部分にボタンを設置
+        var myIndexButton = document.createElement('button');
+        myIndexButton.id = 'my_index_button';
+        myIndexButton.innerHTML = 'ルックアップ値更新';
+        myIndexButton.onclick = function () {
+
+        	var rec = kintone.app.record.get();
+        	var record = rec.record;
+			var itemService = new ItemService(record);
+        	itemService.initMainteStock();
+			
+        	if (! itemService.putMainte()) {
+				event.error = itemService.getMessage();
+				return event;
+        	}
+        }
+        kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+    });	
 	
 })();

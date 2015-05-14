@@ -25,6 +25,16 @@ StockService.prototype = {
 	},
 	
 	/***************************************/
+	/* getter                              */
+	/***************************************/
+	getMessage: function() {
+	  return this.message;
+	},
+	getStatus: function() {
+	  return this.status;
+	},
+	
+	/***************************************/
 	/* 在庫管理-伝票番号 の 採番用初期処理 */
 	/***************************************/
 	initStock: function() {
@@ -66,16 +76,6 @@ StockService.prototype = {
 		this.query = 'ItemCd in ("' + updateItemCd + '") and ProcessDate > "' + this.processDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
-	},
-	
-	/***************************************/
-	/* getter                              */
-	/***************************************/
-	getMessage: function() {
-	  return this.message;
-	},
-	getStatus: function() {
-	  return this.status;
 	},
 	
 	/***************************************/
@@ -342,5 +342,5 @@ StockService.prototype = {
 			this.message = '登録に失敗しました。';
 			return false;
 		}
-	},
+	}
 }
