@@ -123,6 +123,7 @@ ItemService.prototype.putRecords = function(appId) {
 	  }
 	}
 	
+	//共通項目
 	var queryObj = new Object();
 	queryObj["app"] = appId;
 	queryObj["records"] = new Array();
@@ -130,26 +131,29 @@ ItemService.prototype.putRecords = function(appId) {
     for (var i = 0, l = records.length; i < l; i++) {
     	var record = records[i];
     	var partObj = new Object();
+    	//レコードID
     	partObj["id"] = record['$id'].value;
+    	//レコードの各フィールド
     	partObj["record"] = new Array();
+    	
     	if(appId == appId_nyusyutu) {
-    		partObj["record"] = {ItemCd:{value:this.record['ItemCd']['value']}};
+    		//商品コードを上書きする。
+    		partObj["record"] = {ItemCd:{value:record['ItemCd']['value']}};
     	} else {
+    		//商品テーブルパラメータを作成する。
     		var ItemTable = new Array();
-    		ItemTable = record['ItemTable']['value'];
+    		ItemTable = record.ItemTable.value;
     		var tableValueObj = new Object();
     		tableValueObj["value"] = new Array();
+    		//テーブルの要素分回す。
     		for (var j = 0; j < ItemTable.length; j++){
-    			var tableValue = ItemTable[j].value;
+    			var tableValue = ItemTable[j]
     			var tablePartObj = new Object();
-    			tablePartObj["value"] = {{id:tableValue.id},{value:{ItemCd:{{value:tableValue['ItemCd']['value']}},{ItemName:{value:tableValue['ItemName']['value']}}}};
+    			//商品コードを上書きする。
+    			tablePartObj["value"] = {id:tableValue.id,value:{ItemCd:{value:tableValue.value.ItemCd.value}}};
     			tableValueObj["value"].push(tablePartObj["value"]);
     		}
     		partObj["record"] = {ItemTable:{value:tableValueObj["value"]}};
-    		
-    		//var testString = record['ItemTable']['value'][0]['value']['ItemCd']['value'];
-    		//alert(testString);
-    		//partObj["record"] = {ItemCd:{value:this.record['ItemCd']['value']}};
     	}
 		queryObj["records"].push(partObj);
     }
