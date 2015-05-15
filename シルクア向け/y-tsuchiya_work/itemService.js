@@ -147,7 +147,7 @@ ItemService.prototype.putRecords = function(appId) {
     		tableValueObj["value"] = new Array();
     		//テーブルの要素分回す。
     		for (var j = 0; j < ItemTable.length; j++){
-    			var tableValue = ItemTable[j]
+    			var tableValue = ItemTable[j];
     			var tablePartObj = new Object();
     			//商品コードを上書きする。
     			tablePartObj["value"] = {id:tableValue.id,value:{ItemCd:{value:tableValue.value.ItemCd.value}}};
