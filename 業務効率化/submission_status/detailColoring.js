@@ -184,19 +184,15 @@
 				}
 			}
 			// 勤務表（サーバ）
-			if (record['roasterServerCompleted']['value'] === "サーバ格納済(月末)") {
-				record['roasterServerCompleted']['value'] = "○";
-			} else {
+alert(record['roasterServerCompleted']['value']);
+			if (record['roasterServerCompleted']['value'] !=== "○") {
 				if (myDateToday > dtMonthLimit){ 
 					elRoasterSvrChk[i].style.color = 'red';
 					elRoasterSvrChk[i].style.backgroundColor = 'yellow';
 				}
 			}
-
 			// 週報（サーバ）
-			if (record['weekReportServerCompleted']['value'] === "サーバ格納済(月末)") {
-					record['weekReportServerCompleted']['value'] = "○";
-			} else {
+			if (record['weekReportServerCompleted']['value'] !=== "○") {
 				if (myDateToday > dtMonthLimit){ 
 					elWeekRepoSvrChk[i].style.color = 'red';
 					elWeekRepoSvrChk[i].style.backgroundColor = 'yellow';
