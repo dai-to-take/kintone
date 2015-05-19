@@ -35,20 +35,18 @@
 		// サービス初期化
 		var applyTakePcService = new ApplyTakePcService(record);
 		applyTakePcService.initNumbering();
-		/*
 		// API実行
 		if (applyTakePcService.getRecords()){
-			// 新規ItemCdを取得
+			// 新規applyNoを取得
 			if (applyTakePcService.getApplyNo('applyNo')){
 				// 採番したItemCdを設定
-				record['ItemCd']['value'] = applyTakePcService.getAutoApplyNo();
+				record['applyNo']['value'] = applyTakePcService.getAutoApplyNo();
 			} else {
 				event.error = applyTakePcService.getMessage();
 			}
 		}else {
 			event.error = applyTakePcService.getMessage();
 		}
-		*/
 
 		return event;
 	});

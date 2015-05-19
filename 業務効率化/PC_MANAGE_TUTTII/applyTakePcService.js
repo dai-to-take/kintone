@@ -9,25 +9,25 @@ ApplyTakePcService = function(record) {
 };
 
 ApplyTakePcService.prototype.initNumbering = function() {
+	
 	// 申請日を作成
-	this.applyDate = moment(this.strApplyDate); 
-	// 基準日を作成
-	this.baseDate = moment(new Date(this.applyDate.year() ,'7', '1'));
-	/*
+	this.applyDate = moment(this.strApplyDate,"YYYY-MM-DD"); 
+	// 基準日を作成(YYYY-07-01)
+	this.baseDate = moment(new Date(this.applyDate.year() ,'6', '1'));
+
+	
 	if(this.applyDate < this.baseDate){
 		// 開始終了年を生成
-		this.startDate = moment(new Date(this.applyDate.year() - 1 ,'7', '1'));
-		this.endDate = moment(new Date(this.applyDate.year() , '7', '1'));
+		this.startDate = moment(new Date(this.applyDate.year() - 1 ,'6', '1'));
+		this.endDate = moment(new Date(this.applyDate.year() , '6', '1'));
 		//採番用年を取得
-		this.postYear = this.strApplyDate.slice(2.4) -1;
-		alert(this.postYear);
+		this.postYear = parseInt(this.strApplyDate.slice(2,4)) -1;
 	} else {
 		// 開始終了年を生成
-		this.startDate = moment(new Date(this.applyDate.year() , '7', '1'));
-		this.endDate = moment(new Date(this.applyDate.year() + 1 , '7', '1'));
+		this.startDate = moment(new Date(this.applyDate.year() , '6', '1'));
+		this.endDate = moment(new Date(this.applyDate.year() + 1 , '6', '1'));
 		//採番用年を取得
-		this.postYear = this.strApplyDate.slice(2.4);
-		alert(this.postYear);
+		this.postYear = this.strApplyDate.slice(2,4);
 	}
 	
 	// 初期化
@@ -35,12 +35,8 @@ ApplyTakePcService.prototype.initNumbering = function() {
 	// クリエリー作成
 	this.query = 'applyDate >= "' + this.startDate.format("YYYY-MM-DD") + '" and applyDate <"' + this.endDate.format("YYYY-MM-DD") + '" order by applyNo limit 1';
 	
-	// クリエリー作成
-	this.query = 'applyNo  order by ItemCd limit 1';
-	
 	// API用URL作成
 	this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
-	*/
 };
 
 ApplyTakePcService.prototype.getRecords = function() {
@@ -67,7 +63,7 @@ ApplyTakePcService.prototype.getRecords = function() {
 	}
 };
 
-ApplyTakePcService.prototype.getItemCd = function(keyVal) {
+ApplyTakePcService.prototype.getApplyNo = function(keyVal) {
 	var obj = JSON.parse(this.jsonObj);
 	if (obj.records[0] != null){
 		try{
@@ -90,8 +86,8 @@ ApplyTakePcService.prototype.getItemCd = function(keyVal) {
 	return true;
 };
 
-ApplyTakePcService.prototype.getAutoItemCd = function(shapeNm) {
-	return getLocalNm(this.strLocality) + getShapeCd(this.strShape) + ('0000' + this.recNo).slice(-4);
+ApplyTakePcService.prototype.getAutoApplyNo = function(shapeNm) {
+	return "PC-" + this.postYear + "-" + ('000' + this.recNo).slice(-3);
 };
 
 ApplyTakePcService.prototype.getMessage = function() {
@@ -120,6 +116,10 @@ ApplyTakePcService.prototype.putRecords = function(appId) {
     //取得したレコードをArrayに格納
     var respdata = JSON.parse(xmlHttp.responseText);
     records = respdata.records
+	
+	//申請種別が持出かどうかを判断
+	var strApplyKbn = this.record['applyKbn']['value'];
+	var takeOutFlg = strApplyKbn.indexOf("持出");
 
 	//共通項目
 	var queryObj = new Object();
@@ -135,7 +135,12 @@ ApplyTakePcService.prototype.putRecords = function(appId) {
     	partObj["record"] = new Array();
     	
     	//利用者と利用場所を更新する。
-    	partObj["record"] = {userName:{value:this.record['userName']['value']},location:{value:this.record['spaceName']['value']}};
+    	//申請種別が持出ならば相手設置場所、持込ならば本社を設定する。
+    	if(takeOutFlg == 0){
+    		partObj["record"] = {userName:{value:this.record['userName']['value']},location:{value:this.record['spaceName']['value']}};
+    	} else {
+    		partObj["record"] = {userName:{value:this.record['userName']['value']},location:{value:"本社"}};
+    	}
 		queryObj["records"].push(partObj);
     }
 	
