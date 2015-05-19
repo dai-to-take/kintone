@@ -88,23 +88,30 @@
 	
 	// メンテナンス用の機能
     kintone.events.on('app.record.detail.show', function (event) {
-        // メニュ右側の空白部分にボタンを設置
-        var myIndexButton = document.createElement('button');
-        myIndexButton.id = 'my_index_button';
-        myIndexButton.innerHTML = 'ルックアップ値更新';
-        myIndexButton.onclick = function () {
+		// メニュ右側の空白部分にボタンを設置
+		var myIndexButton = document.createElement('button');
+		myIndexButton.id = 'my_index_button';
+		myIndexButton.innerHTML = 'メンテナンス';
+		myIndexButton.onclick = function () {
 
-        	var rec = kintone.app.record.get();
-        	var record = rec.record;
+			var rec = kintone.app.record.get();
+			var record = rec.record;
 			var itemService = new ItemService(record);
-        	itemService.initMainteStock();
-			
-        	if (! itemService.putMainte()) {
+			// 在庫管理更新
+			itemService.initMainteStock();
+			if (! itemService.putMainte()) {
 				event.error = itemService.getMessage();
 				return event;
-        	}
-        }
-        kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
-    });	
-	
+			}
+			// 入出庫履歴更新
+			itemService.initMainteNyusyutu();
+			if (! itemService.putMainte()) {
+				event.error = itemService.getMessage();
+				return event;
+			}
+			
+			alert('メンテナンス完了');
+		}
+		kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+	});
 })();

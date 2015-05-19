@@ -42,6 +42,20 @@ ItemService.prototype = {
 	/***************************************/
 	initMainteStock: function() {
 		this.offset = 0;
+		
+		this.query = 'ItemCd in ("' + this.strItemCd + '") order by レコード番号 asc limit 100 offset ';
+		
+		this.otherAppId = _APPID.STOCK;
+	},
+	/***************************************/
+	/* 入出庫管理のメンテナンス処理用初期処理 */
+	/***************************************/
+	initMainteNyusyutu: function() {
+		this.offset = 0;
+		
+		this.query = 'ItemCd = "' + this.strItemCd + '" order by レコード番号 asc limit 100 offset ';
+		
+		this.otherAppId = _APPID.NYUSYUTU;
 	},
 	
 	/***************************************/
@@ -78,9 +92,9 @@ ItemService.prototype = {
 		
 		while(!loopendflg){
 			// クリエリー作成
-			this.query = 'ItemCd in ("' + this.strItemCd + '") order by レコード番号 asc limit 100 offset ' + this.offset;
+			var workQuery = this.query  + this.offset;
 			// API用URL作成
-			this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.STOCK + '&query=' + encodeURI(this.query);
+			this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ this.otherAppId + '&query=' + encodeURI(workQuery);
 
 			// 同期リクエストを行う
 			if (!this._getRecords()) {
@@ -100,9 +114,26 @@ ItemService.prototype = {
 			}
 		}
 		
-		//共通項目
+		//パラメータ作成
 		var queryObj = new Object();
-		queryObj["app"] = _APPID.STOCK;
+		if (this.otherAppId == _APPID.STOCK){
+			queryObj = this._getQueryObjStock(records);
+		} else {
+			queryObj = this._getQueryObjNyusyutu(records);
+		}
+		
+		if(records.length > 0){
+			if (! this._updateLookup(queryObj)){
+				return false;
+			}
+		}
+		
+		return true;
+	},
+	
+	_getQueryObjStock: function(records) {
+		var queryObj = new Object();
+		queryObj["app"] = this.otherAppId;
 		queryObj["records"] = new Array();
 		
 	    for (var i = 0, l = records.length; i < l; i++) {
@@ -129,16 +160,32 @@ ItemService.prototype = {
 	    	partObj["record"] = {TABEL:{value:tableValueObj["value"]}};
 			queryObj["records"].push(partObj);
 	    }
+		return queryObj;
+	},
+	
+	_getQueryObjNyusyutu: function(records) {
+		var queryObj = new Object();
+		queryObj["app"] = this.otherAppId;
+		queryObj["records"] = new Array();
 		
-		if(records.length > 0){
-			this._updateLookup(queryObj);
-		}
+	    for (var i = 0, l = records.length; i < l; i++) {
+			var record = records[i];
+			var partObj = new Object();
+			//レコードID
+	    	partObj["id"] = record['$id'].value;
+	    	//レコードの各フィールド
+	    	partObj["record"] = new Array();
+
+    		partObj["record"] = {ItemCd:{value:record['ItemCd']['value']}};
+	    	
+			queryObj["records"].push(partObj);
+	    }
+		return queryObj;
 	},
 	
 	_updateLookup: function(queryObj) {
 		var putparams = queryObj;
 
-		var appUrl = kintone.api.url('/k/v1/records');
 		// CSRFトークンの取得
 		var token = kintone.getRequestToken();
 		putparams["__REQUEST_TOKEN__"] = token; 
@@ -148,13 +195,15 @@ ItemService.prototype = {
 		xmlHttp.open('PUT', kintone.api.url('/k/v1/records'), false);
 		xmlHttp.setRequestHeader('Content-Type', 'application/json');
 		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-		alert(JSON.stringify(putparams));
+
 		xmlHttp.send(JSON.stringify(putparams));
 		if (xmlHttp.status == 200){
 			var obj = JSON.parse(xmlHttp.responseText);
-			alert(xmlHttp.status + '：更新に成功しました。');
+			this.message = xmlHttp.status + '：更新に成功しました。';
+			return true;
 		} else {
-			alert(xmlHttp.status + '：更新エラー');
+			this.message = xmlHttp.status + '：更新エラー';
+			return false;
 		}
 	},
 	
