@@ -134,7 +134,7 @@ StockService.prototype = {
 			partObj["NyusyutuDate"] = {value: this.processDate.format("YYYY-MM-DD")};	// 入出庫日
 			partObj["NyusyutuKbn"] = {value: this.record['ProcessKbn']['value']};	// 入出庫区分
 			partObj["SlipNumber"] = {value: autoSlipNumber};						// 伝票番号
-			partObj["SpaceCodeSaki"] = {value: this.record['SpaceCode']['value']};	// 場所コード(先）
+			partObj["SpaceCd"] = {value: this.record['SpaceCd']['value']};	// 場所コード(先）
 			partObj["ItemCd"] = {value: this.tableRecords[i].value['ItemCd'].value};		// 商品コード
 
 			queryObj["records"].push(partObj);
@@ -302,7 +302,7 @@ StockService.prototype = {
 			var partObj = new Object();
 			queryObj["record"] = partObj;
 
-			partObj["SpaceLookUp"] = {value: this.record['SpaceCode']['value']};	// 場所コード
+			partObj["SpaceCd"] = {value: this.record['SpaceCd']['value']};	// 場所コード
 			partObj["SpaceName"] = {value: this.record['SpaceName']['value']};	// 場所名
 
 			// 更新実行

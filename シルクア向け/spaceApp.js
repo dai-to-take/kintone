@@ -93,21 +93,50 @@
 		
 		// サービス初期化
 		var spaceService = new SpaceService(record);
-		spaceService.initialize();
+		
 		// API実行
-		if (spaceService.getRecords()){
-			// 新規ItemCdを取得
-			if (spaceService.getSpaceCd('SpaceCd')){
-				// 採番したSpaceCdを設定
-				record['SpaceCd']['value'] = spaceService.getAutoSpaceCd();
-			} else {
-				event.error = spaceService.getMessage();
-			}
+		if (spaceService.getSpaceCd()){
+			// 採番したSpaceCdを設定
+			record['SpaceCd']['value'] = spaceService.getAutoSpaceCd();
 		}else {
 			event.error = spaceService.getMessage();
 		}
-
+		
 		return event;
 	});
 	
+	// メンテナンス用の機能
+    kintone.events.on('app.record.detail.show', function (event) {
+		// メニュ右側の空白部分にボタンを設置
+		var myIndexButton = document.createElement('button');
+		myIndexButton.id = 'my_index_button';
+		myIndexButton.innerHTML = 'メンテナンス';
+		myIndexButton.onclick = function () {
+
+			var rec = kintone.app.record.get();
+			var record = rec.record;
+			var spaceService = new SpaceService(record);
+			// 在庫管理更新
+			spaceService.initMainteStock();
+			if (! spaceService.putMainte()) {
+				event.error = spaceService.getMessage();
+				return event;
+			}
+			// 入出庫履歴更新
+			spaceService.initMainteNyusyutu();
+			if (! spaceService.putMainte()) {
+				event.error = spaceService.getMessage();
+				return event;
+			}
+			// 商品更新
+			spaceService.initMainteItem();
+			if (! spaceService.putMainte()) {
+				event.error = spaceService.getMessage();
+				return event;
+			}
+			
+			alert('メンテナンス完了');
+		}
+		kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+	});
 })();

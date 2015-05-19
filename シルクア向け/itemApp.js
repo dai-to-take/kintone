@@ -114,4 +114,4 @@
 		}
 		kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
 	});
-})();
+})();	
