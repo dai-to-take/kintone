@@ -52,10 +52,10 @@
 	});
 	
 	// 保存ボタン押下、保存実行前イベント
-	// 商品名変更時に自動反映
 	var eventsPushButton = [
 				'app.record.index.edit.submit',
 				'app.record.edit.submit',
+				'app.record.create.submit'
 				];
 				
 	kintone.events.on(eventsPushButton, function(event) {

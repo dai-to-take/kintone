@@ -10,7 +10,6 @@
 
 		// 取得レコードループ用「年」取得
 		var elBizYear = kintone.app.getFieldElements('bizYear');
-//		var elBizMonth = kintone.app.getFieldElements('bizMonth');
 		// フィールド背景色用勤務表
 		var elRoster = kintone.app.getFieldElements('roster');
 		// フィールド背景色用週報
@@ -28,7 +27,7 @@
 		// 取得レコードループ
         for (var i = 0; i < elBizYear.length; i++) {
             var record = event.records[i];
-			
+
 			// 週報（各週の各週締切日）格納用
 			var dt1stLimit, dt2ndLimit, dt3rdLimit, dt4thLimit, dt5thLimit, dt6thLimit;
 			// 勤務表、その他月次書類締切日格納用
@@ -71,8 +70,6 @@
 			} else {
 				dtMonthLimit = new Date(chkLdate.getTime()+(2*24)*60*60*1000);
 			}
-
-//alert(dtMonthLimit);
 
 			// YYYY-MM-01の週報の締切日
 			dt1stLimit = new Date(record['bizYear']['value'] + "-" + record['bizMonth']['value'] + "-" + nextTueDay.toString());
@@ -184,44 +181,51 @@
 				}
 			}
 			// 勤務表（サーバ）
-alert(record['roasterServerCompleted']['value']);
-			if (record['roasterServerCompleted']['value'] !=== "○") {
+			if (record['roasterServerCompleted']['value'] == "サーバ格納済(月末)") {
+				// DOM要素を取得し、該当の場合○で表示
+				elRoasterSvrChk[i].innerHTML = "○";
+			} else {
 				if (myDateToday > dtMonthLimit){ 
 					elRoasterSvrChk[i].style.color = 'red';
 					elRoasterSvrChk[i].style.backgroundColor = 'yellow';
 				}
 			}
 			// 週報（サーバ）
-			if (record['weekReportServerCompleted']['value'] !=== "○") {
+			if (record['weekReportServerCompleted']['value'] == "サーバ格納済(月末)") {
+				// DOM要素を取得し、該当の場合○で表示
+				elWeekRepoSvrChk[i].innerHTML = "○";
+			} else {
 				if (myDateToday > dtMonthLimit){ 
 					elWeekRepoSvrChk[i].style.color = 'red';
 					elWeekRepoSvrChk[i].style.backgroundColor = 'yellow';
 				}
 			}
 
+ 			// その他書類テーブル
+			var othersTableRecords = new Array();
+			othersTableRecords = record.その他書類.value;
+			for (var j = 0; j < othersTableRecords.length; j++) {
+				// その他書類テーブル内の各レコードのうち、提出期限と提出状況を取得
+				var limitDate = othersTableRecords[j].value['limitDate'].value;
+				var submitState = othersTableRecords[j].value['submitState'].value;
+				if ((submitState !== "") && (submitState !== "○")){
+					if (limitDate !== ""){
+						var dtLimit = new Date(limitDate);
+						if (myDateToday > dtLimit){ 
+							// 背景色を変更
+//							othersTableRecords[j].style.color = 'red';
+//							othersTableRecords[j].style.backgroundColor = 'yellow';
+						}
+					}
+				}
+			}
+
 
         }
 
+		return event;
     });
 
-	// レコード表示イベント
-	kintone.events.on('app.record.detail.show', function (event) {
-		// 表示優先順を非表示に
-		kintone.app.record.setFieldShown('displayOrder', false);
-	});
-
-	// レコード追加イベント
-	kintone.events.on('app.record.create.show', function (event) {
-		// 表示優先順を非表示に
-		kintone.app.record.setFieldShown('displayOrder', false);
-	});
-
-	// レコード編集イベント
-	kintone.events.on('app.record.edit.show', function (event) {
-		// 表示優先順を非表示に
-		kintone.app.record.setFieldShown('displayOrder', false);
-	});
-	
     // 日付の差分日数を返却
     function getDayDiff(date1Str, date2Str) {
 		// getTimeメソッドで経過ミリ秒を取得し、2つの日付の差を求める
