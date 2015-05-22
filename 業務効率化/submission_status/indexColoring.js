@@ -212,7 +212,7 @@
 					if (limitDate !== ""){
 						var dtLimit = new Date(limitDate);
 						if (myDateToday > dtLimit){ 
-							// 背景色を変更
+							// 背景色を変更（書き方が正しくないもよう）
 //							othersTableRecords[j].style.color = 'red';
 //							othersTableRecords[j].style.backgroundColor = 'yellow';
 						}
