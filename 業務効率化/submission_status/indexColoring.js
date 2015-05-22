@@ -4,9 +4,9 @@
 	// [目標]ステータスによってセルに着色
 
 		// データ0件時はなにもせず返す
-        if (!event.size) {
-            return;
-        }
+		if (!event.size) {
+			return;
+		}
 
 		// 取得レコードループ用「年」取得
 		var elBizYear = kintone.app.getFieldElements('bizYear');
@@ -25,8 +25,8 @@
 		var elWeekRepoSvrChk = kintone.app.getFieldElements('weekReportServerCompleted');
 		
 		// 取得レコードループ
-        for (var i = 0; i < elBizYear.length; i++) {
-            var record = event.records[i];
+		for (var i = 0; i < elBizYear.length; i++) {
+			var record = event.records[i];
 
 			// 週報（各週の各週締切日）格納用
 			var dt1stLimit, dt2ndLimit, dt3rdLimit, dt4thLimit, dt5thLimit, dt6thLimit;
@@ -89,14 +89,14 @@
 			var myDateToday = today.getTime();
 
 			// 勤務表
-			if (record['roster']['value'] !== "○") {
+			if ((record['roster']['value'] !== "GL付確認済") && (record['roster']['value'] !== "○")){
 				if (myDateToday > dtMonthLimit){ 
 					elRoster[i].style.color = 'red';
 					elRoster[i].style.backgroundColor = 'yellow';
 				}
 			}
 			// 週報第1週
-			if ((record['week1st']['value'] !== "○") && (record['week1st']['value'] !== "")){
+			if ((record['week1st']['value'] !== "GL付確認済") && (record['week1st']['value'] !== "○") && (record['week1st']['value'] !== "提出なし")){
 				if (myDateToday > dt1stLimit){ 
 					elWeek1st[i].style.color = 'red';
 					elWeek1st[i].style.backgroundColor = 'yellow';
@@ -107,9 +107,9 @@
 						elWeek1st[i].style.backgroundColor = 'cornsilk';
 					}
 				}
-            }
-  			// 週報第2週(必須)
-			if (record['week2nd']['value'] !== "○") {
+			}
+			// 週報第2週(必須)
+			if ((record['week2nd']['value'] !== "GL付確認済") && (record['week2nd']['value'] !== "○")){
 				if (myDateToday > dt2ndLimit){ 
 					elWeek2nd[i].style.color = 'red';
 					elWeek2nd[i].style.backgroundColor = 'yellow';
@@ -120,9 +120,9 @@
 						elWeek2nd[i].style.backgroundColor = 'cornsilk';
 					}
 				}
-            }
+			}
 			// 週報第3週(必須)
-			if (record['week3rd']['value'] !== "○") {
+			if ((record['week3rd']['value'] !== "GL付確認済") && (record['week3rd']['value'] !== "○")){
 				if (myDateToday > dt3rdLimit){ 
 					elWeek3rd[i].style.color = 'red';
 					elWeek3rd[i].style.backgroundColor = 'yellow';
@@ -133,9 +133,9 @@
 						elWeek3rd[i].style.backgroundColor = 'cornsilk';
 					}
 				}
-            }
+			}
 			// 週報第4週(必須)
-			if (record['week4th']['value'] !== "○") {
+			if ((record['week4th']['value'] !== "GL付確認済") && (record['week4th']['value'] !== "○")){
 				if (myDateToday > dt4thLimit){ 
 					elWeek4th[i].style.color = 'red';
 					elWeek4th[i].style.backgroundColor = 'yellow';
@@ -146,9 +146,9 @@
 						elWeek4th[i].style.backgroundColor = 'cornsilk';
 					}
 				}
-            }
+			}
 			// 週報第5週
-			if ((record['week5th']['value'] !== "○") && (record['week5th']['value'] !== "")) {
+			if ((record['week5th']['value'] !== "GL付確認済") && (record['week5th']['value'] !== "○") && (record['week5th']['value'] !== "")) {
 				if (myDateToday > dt5thLimit){ 
 					elWeek5th[i].style.color = 'red';
 					elWeek5th[i].style.backgroundColor = 'yellow';
@@ -159,9 +159,9 @@
 						elWeek5th[i].style.backgroundColor = 'cornsilk';
 					}
 				}
-            }
+			}
 			// 週報第6週
-			if ((record['week6th']['value'] !== "○") && (record['week5th']['value'] !== "")) {
+			if ((record['week6th']['value'] !== "GL付確認済") && (record['week6th']['value'] !== "○") && (record['week5th']['value'] !== "")) {
 				if (myDateToday > dt6thLimit){ 
 					elWeek6th[i].style.color = 'red';
 					elWeek6th[i].style.backgroundColor = 'yellow';
@@ -172,9 +172,9 @@
 						elWeek6th[i].style.backgroundColor = 'cornsilk';
 					}
 				}
-            }
+			}
 			// 精算書
-			if ((record['adjustment']['value'] !== "○") && (record['adjustment']['value'] !== "")) {
+			if ((record['adjustment']['value'] !== "GL付確認済") && (record['adjustment']['value'] !== "○") && (record['adjustment']['value'] !== "提出なし")) {
 				if (myDateToday > dtMonthLimit){ 
 					elAdjustment[i].style.color = 'red';
 					elAdjustment[i].style.backgroundColor = 'yellow';
@@ -208,7 +208,7 @@
 				// その他書類テーブル内の各レコードのうち、提出期限と提出状況を取得
 				var limitDate = othersTableRecords[j].value['limitDate'].value;
 				var submitState = othersTableRecords[j].value['submitState'].value;
-				if ((submitState !== "") && (submitState !== "○")){
+				if ((submitState !== "") && (submitState !== "GL付確認済") && (submitState !== "○")){
 					if (limitDate !== ""){
 						var dtLimit = new Date(limitDate);
 						if (myDateToday > dtLimit){ 
@@ -219,15 +219,12 @@
 					}
 				}
 			}
-
-
-        }
-
+		}
 		return event;
-    });
+	});
 
-    // 日付の差分日数を返却
-    function getDayDiff(date1Str, date2Str) {
+	// 日付の差分日数を返却
+	function getDayDiff(date1Str, date2Str) {
 		// getTimeメソッドで経過ミリ秒を取得し、2つの日付の差を求める
 		var msDiff = date2Str - date1Str
 		// 求めた差分（ミリ秒）を日付へ変換します（経過ミリ秒÷(1000ミリ秒×60秒×60分×24時間)。端数切り捨て）
