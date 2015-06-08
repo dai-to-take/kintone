@@ -32,7 +32,7 @@ Object.freeze(_NSTKBN);
 var _CONDKBN = {
   'WHA': '自社内',
   'DEL': '納入先',
-  'SEL': '販売済',
+  'SELL': '販売済',
   'FAUL': '不良'
 };
 Object.freeze(_CONDKBN);
