@@ -12,17 +12,26 @@ var _APPID = {
 };
 Object.freeze(_APPID);
 
-var _NSTKBN = {
-  'PURCH': '仕入',
-  'DEL': '納入',
-  'SELL': '売上',
-  'RETURN': '返却'
+var _IDOKBN = {
+  'NYUKO': '入庫',
+  'SYUKO': '出庫',
+  'SELL': '販売'
 };
-Object.freeze(_NSTKBN);
+Object.freeze(_IDOKBN);
+
+var _IDORSN = {
+  'PURCH': '仕入',
+  'DELV': '納入',
+  'SELL': '売上',
+  'RETURN': '返却',
+  'CLEAN': 'クリーニング',
+  'REPAIR': '修理'
+};
+Object.freeze(_IDORSN);
 
 var _SILPNUM = {
   'PURCH': 'P',
-  'DEL': 'D',
+  'DELV': 'D',
   'SELL': 'S',
   'RETURN': 'R',
   'NST': 'N'
@@ -31,7 +40,7 @@ Object.freeze(_SILPNUM);
 
 var _CONDKBN = {
   'WHA': '自社内',
-  'DEL': '納入先',
+  'DELV': '納入先',
   'SELL': '販売済',
   'FAUL': '不良'
 };

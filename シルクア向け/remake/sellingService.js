@@ -53,7 +53,7 @@ SellingService.prototype = {
 		// 初期化
 		this.recNo = 1;
 		// クリエリー作成
-		this.query = 'NyusyutuDate >= "' + this.startDate.format("YYYY-MM-DD") + '" and NyusyutuDate <"' + this.endDate.format("YYYY-MM-DD") + '" order by NyusyutuNumber limit 1';
+		this.query = 'IdoDate >= "' + this.startDate.format("YYYY-MM-DD") + '" and IdoDate <"' + this.endDate.format("YYYY-MM-DD") + '" order by IdoNumber limit 1';
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
 	},
@@ -73,7 +73,7 @@ SellingService.prototype = {
 	_initItemCheck: function(updateItemCd) {
 		// 初期化
 		// クリエリー作成
-		this.query = 'ItemCdLU = "' + updateItemCd + '" and NyusyutuDate > "' + this.sellingDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
+		this.query = 'ItemCdLU = "' + updateItemCd + '" and IdoDate > "' + this.sellingDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
 	},
@@ -110,8 +110,8 @@ SellingService.prototype = {
 		
 		// 取得
 		if (this._getRecords()){
-			// NyusyutuNumberから初期値を取得
-			if (this._getMaxNumber('NyusyutuNumber' , -5)){
+			// IdoNumberから初期値を取得
+			if (this._getMaxNumber('IdoNumber' , -5)){
 				// 初期値を取得
 				cntNyusyutu  = this.recNo;
 			} else {
@@ -130,10 +130,11 @@ SellingService.prototype = {
 
 		for (var i = 0; i < this.tableRecords.length; i++) {
 			var partObj = new Object();
-			partObj["NyusyutuNumber"] = {value: this._getAutoNyusyutuNumber(cntNyusyutu)};	// 入出庫番号
-			partObj["NyusyutuDate"] = {value: this.sellingDate.format("YYYY-MM-DD")};	// 入出庫日
+			partObj["IdoNumber"] = {value: this._getAutoIdoNumber(cntNyusyutu)};	// 入出庫番号
+			partObj["IdoDate"] = {value: this.sellingDate.format("YYYY-MM-DD")};	// 入出庫日
 			
-			partObj["NyusyutuKbn"] = {value: _NSTKBN.SELL};	// 入出庫区分
+			partObj["IdoKbn"] = {value: _IDOKBN.SELL};	// 移動区分
+			partObj["IdoReason"] = {value: _IDORSN.SELL};	// 移動理由
 			
 			partObj["SlipNumber"] = {value: autoSellingNumber};						// 伝票番号
 //			partObj["DeliveryNumberLU"] = {value: autoDeliveryNumber};	// 伝票番号
@@ -156,7 +157,7 @@ SellingService.prototype = {
 			return false;
 		}
 	},
-	_getAutoNyusyutuNumber: function(nyusyutuNo) {
+	_getAutoIdoNumber: function(nyusyutuNo) {
 		return _SILPNUM.NST + getYmd(this.strSellingDate) + ('00000' + nyusyutuNo).slice(-5);
 	},
 	

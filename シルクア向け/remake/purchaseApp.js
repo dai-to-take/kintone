@@ -3,10 +3,10 @@
 	'use strict';
 
 	// 検索条件調査
-	kintone.events.on(['app.record.index.show'], function (event) {
-		var query= kintone.app.getQuery();
-		console.log(query);
-	});
+	//kintone.events.on(['app.record.index.show'], function (event) {
+	//	var query= kintone.app.getQuery();
+	//	console.log(query);
+	//});
 	
 	// レコード追加、編集画面の表示前処理
 	// 仕入伝票のdisabled化
