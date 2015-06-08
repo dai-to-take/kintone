@@ -27,7 +27,7 @@ var _SILPNUM = {
   'RETURN': 'R',
   'NST': 'N'
 };
-Object.freeze(_NSTKBN);
+Object.freeze(_SILPNUM);
 
 var _CONDKBN = {
   'WHA': '自社内',

@@ -1,10 +1,10 @@
-/* sellingService.js */
+/* returnService.js */
 
-var SellingService = function(record) {
+var ReturnService = function(record) {
 	this._init(record);
 };
 
-SellingService.prototype = {
+ReturnService.prototype = {
 	_init: function(record) {
 		// 初期化
 		this.status = "";
@@ -15,13 +15,13 @@ SellingService.prototype = {
 		this.tableRecords = record['TABEL']['value'];
 		
 		// 変数セット
-		this.strSellingDate = record['SellingDate']['value'];
+		this.strReturnDate = record['ReturnDate']['value'];
 		
 		// クリエリー作成
-		this.sellingDate = moment(this.strSellingDate);
+		this.returnDate = moment(this.strReturnDate);
 		// 開始終了年を生成
-		this.startDate = moment(new Date(this.sellingDate.year() , this.sellingDate.month(), '1'));
-		this.endDate = moment(new Date(this.sellingDate.year() , this.sellingDate.month() + 1 , '1'));
+		this.startDate = moment(new Date(this.returnDate.year() , this.returnDate.month(), '1'));
+		this.endDate = moment(new Date(this.returnDate.year() , this.returnDate.month() + 1 , '1'));
 	},
 	
 	/***************************************/
@@ -35,13 +35,13 @@ SellingService.prototype = {
 	},
 	
 	/***************************************/
-	/* 売上管理-伝票番号 の 採番用初期処理 */
+	/* 返却管理-伝票番号 の 採番用初期処理 */
 	/***************************************/
-	initSelling: function() {
+	initReturn: function() {
 		// 初期化
 		this.recNo = 1;
 		// クリエリー作成
-		this.query = 'SellingDate >= "' + this.startDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" and SellingDate <"' + this.endDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by SellingNumber limit 1';
+		this.query = 'ReturnDate >= "' + this.startDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" and ReturnDate <"' + this.endDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by ReturnNumber limit 1';
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
 	},
@@ -73,7 +73,7 @@ SellingService.prototype = {
 	_initItemCheck: function(updateItemCd) {
 		// 初期化
 		// クリエリー作成
-		this.query = 'ItemCdLU = "' + updateItemCd + '" and NyusyutuDate > "' + this.sellingDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
+		this.query = 'ItemCdLU = "' + updateItemCd + '" and NyusyutuDate > "' + this.returnDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
 		// API用URL作成
 		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
 	},
@@ -81,11 +81,11 @@ SellingService.prototype = {
 	/***************************************/
 	/* 在庫管理用の伝票番号採番            */
 	/***************************************/
-	getSellingNumber: function() {
+	getReturnNumber: function() {
 		
 		if (this._getRecords()){
-			// 新規SellingNumberを取得
-			if (this._getMaxNumber('SellingNumber',-3)){
+			// 新規ReturnNumberを取得
+			if (this._getMaxNumber('ReturnNumber',-3)){
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {
@@ -97,14 +97,14 @@ SellingService.prototype = {
 			return false;
 		}
 	},
-	getAutoSellingNumber: function() {
-		return _SILPNUM.SELL + getYmd(this.strSellingDate) + ('000' + this.recNo).slice(-3);
+	getAutoReturnNumber: function() {
+		return _SILPNUM.RETURN + getYmd(this.strReturnDate) + ('000' + this.recNo).slice(-3);
 	},
 
 	/***************************************/
 	/* 入出庫履歴の登録                    */
 	/***************************************/
-	postNyusyutu: function(autoSellingNumber) {
+	postNyusyutu: function(autoReturnNumber) {
 		// 変数初期化
 		var cntNyusyutu = 0;
 		
@@ -131,17 +131,17 @@ SellingService.prototype = {
 		for (var i = 0; i < this.tableRecords.length; i++) {
 			var partObj = new Object();
 			partObj["NyusyutuNumber"] = {value: this._getAutoNyusyutuNumber(cntNyusyutu)};	// 入出庫番号
-			partObj["NyusyutuDate"] = {value: this.sellingDate.format("YYYY-MM-DD")};	// 入出庫日
+			partObj["NyusyutuDate"] = {value: this.returnDate.format("YYYY-MM-DD")};	// 入出庫日
 			
-			partObj["NyusyutuKbn"] = {value: _NSTKBN.SELL};	// 入出庫区分
+			partObj["NyusyutuKbn"] = {value: _NSTKBN.RETURN};	// 入出庫区分
 			
-			partObj["SlipNumber"] = {value: autoSellingNumber};						// 伝票番号
+			partObj["SlipNumber"] = {value: autoReturnNumber};						// 伝票番号
 //			partObj["DeliveryNumberLU"] = {value: autoDeliveryNumber};	// 伝票番号
 			
-			partObj["CustomerCdLU"] = {value: this.record['DeliveryCodeLU']['value']};	// 顧客コード
-//			partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
+//			partObj["CustomerCdLU"] = {value: this.record['DeliveryCodeLU']['value']};	// 顧客コード
+			partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
 			partObj["ItemCdLU"] = {value: this.tableRecords[i].value['ItemCdLU'].value};	//商品コード
-			partObj["Price"] = {value: this.tableRecords[i].value['SellingPrice'].value};	//価格
+//			partObj["Price"] = {value: this.tableRecords[i].value['ReturnPrice'].value};	//価格
 
 			queryObj["records"].push(partObj);
 			
@@ -157,7 +157,7 @@ SellingService.prototype = {
 		}
 	},
 	_getAutoNyusyutuNumber: function(nyusyutuNo) {
-		return _SILPNUM.NST + getYmd(this.strSellingDate) + ('00000' + nyusyutuNo).slice(-5);
+		return _SILPNUM.NST + getYmd(this.strReturnDate) + ('00000' + nyusyutuNo).slice(-5);
 	},
 	
 	_getRecords: function() {
@@ -307,9 +307,9 @@ SellingService.prototype = {
 			var partObj = new Object();
 			queryObj["record"] = partObj;
 
-			partObj["SellingPrice"] = {value: this.tableRecords[i].value['SellingPrice'].value};	// 価格
+			partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	// 倉庫コード
 
-			partObj["ConditionKbn"] = {value: _CONDKBN.SELL};	// 状態区分
+			partObj["ConditionKbn"] = {value: _CONDKBN.WHA};	// 状態区分
 			
 			// 更新実行
 			if (this._putRecords(queryObj)){
