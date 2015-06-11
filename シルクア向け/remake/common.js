@@ -1,10 +1,10 @@
 /* common.js */
-var _CONST = {
+var _STATUS = {
   'OK': '10',
   'WARNING': '80',
   'ERROR': '90'
 };
-Object.freeze(_CONST);
+Object.freeze(_STATUS);
 
 var _APPID = {
   'IDO': 97,

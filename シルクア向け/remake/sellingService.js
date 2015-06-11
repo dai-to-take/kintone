@@ -170,16 +170,16 @@ SellingService.prototype = {
 		
 		if (xmlHttp.status == 200){
 			if(window.JSON){
-				this.status = _CONST.OK;
+				this.status = _STATUS.OK;
 				this.jsonObj = xmlHttp.responseText;
 				return true;
 			} else {
-				this.status = _CONST.WARNING;
+				this.status = _STATUS.WARNING;
 				this.message = xmlHttp.statusText;
 				return false;
 			}
 		} else {
-			this.status = _CONST.ERROR;
+			this.status = _STATUS.ERROR;
 			this.message = 'コードが取得できません。';
 			return false;
 		}
@@ -240,16 +240,16 @@ SellingService.prototype = {
 
 		if (xmlHttp.status == 200){
 			if(window.JSON){
-				this.status = _CONST.OK;
+				this.status = _STATUS.OK;
 				this.jsonObj = xmlHttp.responseText;
 				return true;
 			} else {
-				this.status = _CONST.WARNING;
+				this.status = _STATUS.WARNING;
 				this.message = xmlHttp.statusText;
 				return false;
 			}
 		} else {
-			this.status = _CONST.ERROR;
+			this.status = _STATUS.ERROR;
 			this.message = '登録に失敗しました。';
 			return false;
 		}
@@ -336,16 +336,16 @@ SellingService.prototype = {
 		
 		if (xmlHttp.status == 200){
 			if(window.JSON){
-				this.status = _CONST.OK;
+				this.status = _STATUS.OK;
 				this.jsonObj = xmlHttp.responseText;
 				return true;
 			} else {
-				this.status = _CONST.WARNING;
+				this.status = _STATUS.WARNING;
 				this.message = xmlHttp.statusText;
 				return false;
 			}
 		} else {
-			this.status = _CONST.ERROR;
+			this.status = _STATUS.ERROR;
 			this.message = '登録に失敗しました。';
 			return false;
 		}
