@@ -82,7 +82,7 @@
 	});
 	
 	// レコード追加画面の保存前処理
-	// 場所コードの採番
+	// 倉庫コードの採番
 	var eventAdd = [
 				'app.record.create.submit'
 				];

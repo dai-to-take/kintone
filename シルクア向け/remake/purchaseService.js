@@ -18,11 +18,6 @@ PurchaseService.prototype = {
 		// 変数セット
 		this.strPurchaseDate = record['PurchaseDate']['value'];
 		
-		// クリエリー作成
-		this.purchaseDate = moment(this.strPurchaseDate);
-		// 開始終了年を生成
-		this.startDate = moment(new Date(this.purchaseDate.year() , this.purchaseDate.month(), '1'));
-		this.endDate = moment(new Date(this.purchaseDate.year() , this.purchaseDate.month() + 1 , '1'));
 	},
 	
 	/***************************************/
@@ -36,62 +31,22 @@ PurchaseService.prototype = {
 	},
 	
 	/***************************************/
-	/* 仕入管理-伝票番号 の 採番用初期処理 */
-	/***************************************/
-	initPurchase: function() {
-		// 初期化
-		// クリエリー作成
-		this.query = 'PurchaseDate >= "' + this.startDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" and PurchaseDate <"' + this.endDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by PurchaseNumber limit 1';
-		// API用URL作成
-
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
-	},
-	
-	/***************************************/
 	/* 仕入管理用の伝票番号採番            */
 	/***************************************/
 	getPurchaseNumber: function() {
-		
-		if (this.commonService.fncGetRecords(this.apiUrl)){
-			var jsonObj = this.commonService.getJsonObj();
-			// 新規PurchaseNumberを取得
-			if (this.commonService.fncGetMaxNumber(jsonObj,'PurchaseNumber',-3)){
-				this.message = '伝票番号が取得できました';
-				return true;
-			} else {
-				this.message = '伝票番号が取得できません。';
-				return false;
-			}
+		// API実行
+		if (this.commonService.fncMakeSlipNumber('PurchaseDate' , 'PurchaseNumber' , _SILPNUM.PURCH , this.strPurchaseDate )){
+			this.message = '伝票番号が取得できました';
+			return true;
 		}else {
 			this.message = '伝票番号が取得できません。';
 			return false;
 		}
 	},
 	getAutoPurchaseNumber: function() {
-		return _SILPNUM.PURCH + getYmd(this.strPurchaseDate) + ('000' + this.commonService.getRecNo()).slice(-3);
+		return this.commonService.getSlipNumber();
 	},
 	
-	/***************************************/
-	/* 入出庫履歴 の 登録用初期処理        */
-	/***************************************/
-	_initNyuSyutu: function() {
-		// 初期化
-		// クリエリー作成
-		this.query = 'IdoDate >= "' + this.startDate.format("YYYY-MM-DD") + '" and IdoDate <"' + this.endDate.format("YYYY-MM-DD") + '" order by IdoNumber limit 1';
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
-	},
-	
-	/***************************************/
-	/* 更新チェック用初期処理                  */
-	/***************************************/
-	_initNyusyutuCheck: function(postSlipNumber) {
-		// 初期化
-		// クリエリー作成
-		this.query = 'SlipNumber = "' + postSlipNumber + '"';
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
-	},
 	/***************************************/
 	/* 入出庫履歴の登録                    */
 	/***************************************/
@@ -99,34 +54,23 @@ PurchaseService.prototype = {
 		// 変数初期化
 		var cntNyusyutu = 0;
 		
-		//存在チェック初期化
-		this._initNyusyutuCheck(this.record['PurchaseNumber']['value']);
-		// すでに登録済みか？
-		if (this.commonService.fncGetRecords(this.apiUrl)){
-			var jsonObj = this.commonService.getJsonObj();
-			if (this.commonService.fncIsExistence(jsonObj)){
-				this.message = 'すでに移動履歴に展開済みです。';
-				return false;
-			}
-		} else {
-			this.message = '商品チェックが失敗しました。';
+		//すでに登録済みか？
+		var resVal = this.commonService.fncIdoCheck(this.record['PurchaseNumber']['value']);
+		if (resVal == _CHECK.YES) {
+			// すでに展開済みの場合
+			this.message = 'すでに移動履歴に展開済みです。';
+			return false;
+		} else if (resVal == _CHECK.ERROR) {
+			this.message = '移動履歴チェックが失敗しました。';
 			return false;
 		}
 		
-		// 移動履歴登録用で初期化
-		this._initNyuSyutu();
-		// 取得
-		if (this.commonService.fncGetRecords(this.apiUrl)){
-			var jsonObj = this.commonService.getJsonObj();
-			// IdoNumberから初期値を取得
-			if (this.commonService.fncGetMaxNumber(jsonObj,'IdoNumber' , -5)){
-				// 初期値を取得
-				cntNyusyutu  = this.commonService.getRecNo();
-			} else {
-				this.message = '伝票番号が取得できません。';
-				return false;
-			}
-		}else {
+		// 移動履歴登録
+		// 基準番号を取得
+		if (this.commonService.fncMakeIdoNumber(this.strPurchaseDate)) {
+			// 初期値を取得
+			cntNyusyutu  = this.commonService.getRecNo();
+		} else {
 			this.message = '伝票番号が取得できません。';
 			return false;
 		}
@@ -138,8 +82,8 @@ PurchaseService.prototype = {
 		var partObj = new Object();
 		queryObj["record"] = partObj;
 
-		partObj["IdoNumber"] = {value: this._getAutoIdoNumber(cntNyusyutu)};	// 入出庫番号
-		partObj["IdoDate"] = {value: this.purchaseDate.format("YYYY-MM-DD")};	// 入出庫日
+		partObj["IdoNumber"] = {value: this.commonService.fncGetIdoNumber(this.strPurchaseDate , cntNyusyutu)};	// 入出庫番号
+		partObj["IdoDate"] = {value: this.commonService.fncGetFormatDate(this.strPurchaseDate , "YYYY-MM-DD")};	// 入出庫日
 		
 		partObj["IdoKbn"] = {value: _IDOKBN.NYUKO};	// 移動区分
 		partObj["IdoReason"] = {value: _IDORSN.PURCH};	// 移動理由
@@ -161,6 +105,6 @@ PurchaseService.prototype = {
 		}
 	},
 	_getAutoIdoNumber: function(nyusyutuNo) {
-		return _SILPNUM.NST + getYmd(this.strPurchaseDate) + ('00000' + nyusyutuNo).slice(-5);
+		return _SILPNUM.NST + this.commonService.fncGetYmd(this.strPurchaseDate) + ('00000' + nyusyutuNo).slice(-5);
 	}
 }

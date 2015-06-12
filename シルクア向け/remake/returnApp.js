@@ -39,7 +39,6 @@
 
 		// サービス初期化
 		var returnService = new ReturnService(record);
-		returnService.initReturn();
 
 		// 伝票番号の採番
 		if (returnService.getReturnNumber()){
@@ -52,7 +51,6 @@
 		}
 		
 		// 入出庫履歴の登録
-		returnService.initNyuSyutu();
 		if (! returnService.postNyusyutu(autoReturnNumber)){
 			event.error = returnService.getMessage();
 			return event;

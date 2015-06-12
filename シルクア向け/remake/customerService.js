@@ -13,18 +13,12 @@ CustomerService.prototype = {
 		this.recNo = 1;
 		this.record = record;
 
+		// サービス初期化
+		this.commonService = new CommonService();
+		
 		// 変数セット
 		this.strCustomerKbn = this.record['CustomerKbn']['value'];
-
 		this.strAreaKbn = this.record['AreaKbn']['value'];
-
-		this.strCustomerCd =  this.record['CustomerCd']['value'];
-		
-		// クリエリー作成
-		this.query = 'CustomerKbn in ("' + this.strCustomerKbn+ '") and AreaKbn in ("' + this.strAreaKbn + '") order by CustomerCd limit 1';
-		
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
 	},
 
 	getMessage: function() {
@@ -32,12 +26,16 @@ CustomerService.prototype = {
 	},
 	
 	/***************************************/
-	/* 場所コードの採番                    */
+	/* 顧客コードの採番                    */
 	/***************************************/
 	getCustomerCd: function(keyVal) {
-		if (this._getRecords()){
+		// クエリー作成
+		var wQuery = 'CustomerKbn in ("' + this.strCustomerKbn+ '") and AreaKbn in ("' + this.strAreaKbn + '") order by CustomerCd limit 1';
+		// API実行
+		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
+			var jsonObj = this.commonService.getJsonObj();
 			// 新規CustomerCdを取得
-			if (this._getMaxNumber('CustomerCd')){
+			if (this.commonService.fncGetMaxNumber(jsonObj,'CustomerCd',-5)){
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {
@@ -49,13 +47,16 @@ CustomerService.prototype = {
 			return false;
 		}
 	},
+	getAutoCustomerCd: function() {
+		return this.commonService.fncGetCustomerKbnCd(this.strCustomerKbn) + 
+					this.commonService.fncGetAreaCd(this.strAreaKbn) + 
+						('00000' + this.commonService.getRecNo()).slice(-5);
+	},
 	
 	/***************************************/
 	/* 在庫管理のメンテナンス処理用初期処理 */
 	/***************************************/
 	initMainteStock: function() {
-		this.offset = 0;
-		
 		this.query = 'SpaceCd = "' + this.strSpaceCd + '" order by レコード番号 asc limit 100 offset ';
 		
 		this.otherAppId = _APPID.STOCK;
@@ -65,8 +66,6 @@ CustomerService.prototype = {
 	/* 入出庫管理のメンテナンス処理用初期処理 */
 	/***************************************/
 	initMainteNyusyutu: function() {
-		this.offset = 0;
-		
 		this.query = 'SpaceCd = "' + this.strSpaceCd + '" order by レコード番号 asc limit 100 offset ';
 		
 		this.otherAppId = _APPID.NYUSYUTU;
@@ -76,60 +75,9 @@ CustomerService.prototype = {
 	/* 商品のメンテナンス処理用初期処理 */
 	/***************************************/
 	initMainteItem: function() {
-		this.offset = 0;
-		
 		this.query = 'SpaceCd = "' + this.strSpaceCd + '" order by レコード番号 asc limit 100 offset ';
 		
 		this.otherAppId = _APPID.ITEM;
-	},
-	_getRecords: function() {
-		var xmlHttp = new XMLHttpRequest();
-		// 同期リクエストを行う
-		xmlHttp.open("GET", this.apiUrl, false);
-		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-		xmlHttp.send(null);
-		
-		if (xmlHttp.status == 200){
-			if(window.JSON){
-				this.status = "00";
-				this.jsonObj = xmlHttp.responseText;
-				return true;
-			} else {
-				this.status = "80";
-				this.message = xmlHttp.statusText;
-				return false;
-			}
-		} else {
-			this.status = "90";
-			this.message = 'コードが取得できません。';
-			return false;
-		}
-	},
-	
-	_getMaxNumber: function(keyVal) {
-		var obj = JSON.parse(this.jsonObj);
-		if (obj.records[0] != null){
-			try{
-				var strGetVal = '';
-				for ( var keyA in obj.records ) {
-					for ( var keyB in obj.records[keyA] ) {
-						if (keyB == keyVal){
-							strGetVal = obj.records[keyA][keyB].value;
-						}
-					}
-				}
-
-				this.recNo = parseInt(strGetVal.slice(-5),10) +1;
-				
-			} catch(e){
-				this.message = '伝票番号が取得できません。';
-				return false;
-			}
-		}
-		return true;
-	},
-	getAutoCustomerCd: function() {
-		return getCustomerKbnCd(this.strCustomerKbn) + getAreaCd(this.strAreaKbn) + ('00000' + this.recNo).slice(-5);
 	},
 	
 	/***************************************/
@@ -139,21 +87,19 @@ CustomerService.prototype = {
 	
 		var records = new Array();
 		var loopendflg = false;
+		var offset = 0;
 		
 		while(!loopendflg){
-			// クリエリー作成
-			var workQuery = this.query  + this.offset;
-			// API用URL作成
-			this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ this.otherAppId + '&query=' + encodeURI(workQuery);
-
+			// クエリー作成
+			var workQuery = this.query  + offset;
 			// 同期リクエストを行う
-			if (!this._getRecords()) {
+			if (this.commonService.fncGetRecords(this.otherAppId , workQuery)){
 				this.message = '場所コードのメンテナンスに失敗しました。';
 				return false;
 			}
 		
 			//取得したレコードをArrayに格納
-			var respdata = JSON.parse(this.jsonObj);
+			var respdata = JSON.parse(this.commonService.getJsonObj());
 			if(respdata.records.length > 0){
 				for(var i = 0; respdata.records.length > i; i++){
 					records.push(respdata.records[i]);
@@ -168,7 +114,7 @@ CustomerService.prototype = {
 		var queryObj = this._getQueryObj(records);
 		
 		if(records.length > 0){
-			if (! this._updateLookup(queryObj)){
+			if (! this.commonService.fntPutRecords(queryObj)){
 				return false;
 			}
 		}
@@ -194,30 +140,6 @@ CustomerService.prototype = {
 			queryObj["records"].push(partObj);
 	    }
 		return queryObj;
-	},
-	
-	_updateLookup: function(queryObj) {
-		var putparams = queryObj;
-
-		// CSRFトークンの取得
-		var token = kintone.getRequestToken();
-		putparams["__REQUEST_TOKEN__"] = token; 
-		
-		// 同期リクエストを行う
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.open('PUT', kintone.api.url('/k/v1/records'), false);
-		xmlHttp.setRequestHeader('Content-Type', 'application/json');
-		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-
-		xmlHttp.send(JSON.stringify(putparams));
-		if (xmlHttp.status == 200){
-			var obj = JSON.parse(xmlHttp.responseText);
-			this.message = xmlHttp.status + '：更新に成功しました。';
-			return true;
-		} else {
-			this.message = xmlHttp.status + '：更新エラー';
-			return false;
-		}
 	}
 	
 }

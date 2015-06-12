@@ -39,8 +39,6 @@
 
 		// サービス初期化
 		var deliveryService = new DeliveryService(record);
-		deliveryService.initDelivery();
-
 		// 伝票番号の採番
 		if (deliveryService.getDeliveryNumber()){
 			// 採番したSlipNumberを設定
@@ -52,7 +50,6 @@
 		}
 		
 		// 入出庫履歴の登録
-		deliveryService.initNyuSyutu();
 		if (! deliveryService.postNyusyutu(autoDeliveryNumber)){
 			event.error = deliveryService.getMessage();
 			return event;

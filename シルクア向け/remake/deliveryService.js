@@ -19,11 +19,6 @@ DeliveryService.prototype = {
 		// 変数セット
 		this.strDeliveryDate = record['DeliveryDate']['value'];
 		
-		// クリエリー作成
-		this.deliveryDate = moment(this.strDeliveryDate);
-		// 開始終了年を生成
-		this.startDate = moment(new Date(this.deliveryDate.year() , this.deliveryDate.month(), '1'));
-		this.endDate = moment(new Date(this.deliveryDate.year() , this.deliveryDate.month() + 1 , '1'));
 	},
 	
 	/***************************************/
@@ -37,50 +32,22 @@ DeliveryService.prototype = {
 	},
 	
 	/***************************************/
-	/* 納入管理-伝票番号 の 採番用初期処理 */
-	/***************************************/
-	initDelivery: function() {
-		// 初期化
-		// クリエリー作成
-		this.query = 'DeliveryDate >= "' + this.startDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" and DeliveryDate <"' + this.endDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by DeliveryNumber limit 1';
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
-	},
-	
-	/***************************************/
 	/* 納入管理用の伝票番号採番            */
 	/***************************************/
 	getDeliveryNumber: function() {
-		
-		if (this.commonService.fncGetRecords(this.apiUrl)){
-			var jsonObj = this.commonService.getJsonObj();
-			// 新規DeliveryNumberを取得
-			if (this.commonService.fncGetMaxNumber(jsonObj,'DeliveryNumber',-3)){
-				this.message = '伝票番号が取得できました';
-				return true;
-			} else {
-				this.message = '伝票番号が取得できません。';
-				return false;
-			}
+		// API実行
+		if (this.commonService.fncMakeSlipNumber('DeliveryDate' , 'DeliveryNumber' , _SILPNUM.DELV , this.strDeliveryDate )){
+			this.message = '伝票番号が取得できました';
+			return true;
 		}else {
 			this.message = '伝票番号が取得できません。';
 			return false;
 		}
 	},
 	getAutoDeliveryNumber: function() {
-		return _SILPNUM.DELV + this.commonService.fncGetYmd(this.strDeliveryDate) + ('000' + this.commonService.getRecNo()).slice(-3);
+		return this.commonService.getSlipNumber();
 	},
 
-	/***************************************/
-	/* 入出庫履歴 の 登録用初期処理        */
-	/***************************************/
-	initNyuSyutu: function() {
-		// 初期化
-		// クリエリー作成
-		this.query = 'IdoDate >= "' + this.startDate.format("YYYY-MM-DD") + '" and IdoDate <"' + this.endDate.format("YYYY-MM-DD") + '" order by IdoNumber limit 1';
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
-	},
 	/***************************************/
 	/* 入出庫履歴の登録                    */
 	/***************************************/
@@ -88,18 +55,11 @@ DeliveryService.prototype = {
 		// 変数初期化
 		var cntNyusyutu = 0;
 		
-		// 取得
-		if (this.commonService.fncGetRecords(this.apiUrl)){
-			var jsonObj = this.commonService.getJsonObj();
-			// IdoNumberから初期値を取得
-			if (this.commonService.fncGetMaxNumber(jsonObj,'IdoNumber' , -5)){
-				// 初期値を取得
-				cntNyusyutu  = this.commonService.getRecNo();
-			} else {
-				this.message = '伝票番号が取得できません。';
-				return false;
-			}
-		}else {
+		// 基準番号を取得
+		if (this.commonService.fncMakeIdoNumber(this.strDeliveryDate)) {
+			// 初期値を取得
+			cntNyusyutu  = this.commonService.getRecNo();
+		} else {
 			this.message = '伝票番号が取得できません。';
 			return false;
 		}
@@ -111,8 +71,8 @@ DeliveryService.prototype = {
 
 		for (var i = 0; i < this.tableRecords.length; i++) {
 			var partObj = new Object();
-			partObj["IdoNumber"] = {value: this._getAutoIdoNumber(cntNyusyutu)};	// 入出庫番号
-			partObj["IdoDate"] = {value: this.deliveryDate.format("YYYY-MM-DD")};	// 入出庫日
+			partObj["IdoNumber"] = {value: this.commonService.fncGetIdoNumber(this.strDeliveryDate , cntNyusyutu)};	// 入出庫番号
+			partObj["IdoDate"] = {value: this.commonService.fncGetFormatDate(this.strDeliveryDate , "YYYY-MM-DD")};	// 入出庫日
 			
 			partObj["IdoKbn"] = {value: _IDOKBN.SYUKO};	// 移動区分
 			partObj["IdoReason"] = {value: _IDORSN.DELV};	// 移動理由
@@ -138,30 +98,7 @@ DeliveryService.prototype = {
 			return false;
 		}
 	},
-	_getAutoIdoNumber: function(nyusyutuNo) {
-		return _SILPNUM.NST + this.commonService.fncGetYmd(this.strDeliveryDate) + ('00000' + nyusyutuNo).slice(-5);
-	},
 	
-	/***************************************/
-	/* 商品ID取得用初期処理                  */
-	/***************************************/
-	_initItemUpdate: function(updateItemCd) {
-		// 初期化
-		// クリエリー作成
-		this.query = 'ItemCd = "' + updateItemCd + '" limit 1';
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.ITEM + '&query=' + encodeURI(this.query);
-	},
-	/***************************************/
-	/* 更新チェック用初期処理                  */
-	/***************************************/
-	_initItemCheck: function(updateItemCd) {
-		// 初期化
-		// クリエリー作成
-		this.query = 'ItemCdLU = "' + updateItemCd + '" and IdoDate > "' + this.deliveryDate.format("YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ _APPID.IDO + '&query=' + encodeURI(this.query);
-	},
 	/***************************************/
 	/* 商品の更新                          */
 	/***************************************/
@@ -172,30 +109,18 @@ DeliveryService.prototype = {
 			var itemCdId = null;
 			
 			// 商品チェック
-			this._initItemCheck(updateItemCd);
-			// 今回の処理日より未来での変更があるか？
-			if (this.commonService.fncGetRecords(this.apiUrl)){
-				var jsonObj = this.commonService.getJsonObj();
-				if (this.commonService.fncIsExistence(jsonObj)){
-					// 存在する場合は次の商品へ
-					continue;
-				}
-			} else {
+			var resVal = this.commonService.fncItemCheck(updateItemCd , this.strDeliveryDate);
+			if (resVal == _CHECK.YES) {
+				// 未来の商品が存在した場合
+				continue;
+			} else if (resVal == _CHECK.ERROR) {
 				this.message = '商品チェックが失敗しました。';
 				return false;
 			}
 
-			// 商品ID取得用で初期化
-			this._initItemUpdate(updateItemCd);
-			// 対象商品の$idを取得
-			if (this.commonService.fncGetRecords(this.apiUrl)){
-				var jsonObj = this.commonService.getJsonObj();
-				if (this.commonService.fncGetKeyVal(jsonObj,'$id')){
-					itemCdId = this.commonService.getKeyVal();
-				} else {
-					this.message = '対象商品がが得できません。';
-					return false;
-				}
+			// 商品ID取得
+			if (this.commonService.fncGetRecordData(_APPID.ITEM , 'ItemCd' , updateItemCd , '$id' )) {
+				itemCdId = this.commonService.getRecordData();
 			} else {
 				this.message = '対象商品がが得できません。';
 				return false;

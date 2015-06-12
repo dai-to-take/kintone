@@ -73,8 +73,6 @@
 		
 		// サービス初期化
 		var itemService = new ItemService(record);
-		itemService.initItem();
-		
 		// API実行
 		if (itemService.getItemCd()){
 			// 採番したItemCdを設定

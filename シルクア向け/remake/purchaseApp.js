@@ -40,7 +40,6 @@
 
 		// サービス初期化
 		var purchaseService = new PurchaseService(record);
-		purchaseService.initPurchase();
 
 		// 伝票番号の採番
 		if (purchaseService.getPurchaseNumber()){

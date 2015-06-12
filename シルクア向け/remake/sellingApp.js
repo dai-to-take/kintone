@@ -39,7 +39,6 @@
 
 		// サービス初期化
 		var sellingService = new SellingService(record);
-		sellingService.initSelling();
 
 		// 伝票番号の採番
 		if (sellingService.getSellingNumber()){
@@ -52,7 +51,6 @@
 		}
 		
 		// 入出庫履歴の登録
-		sellingService.initNyuSyutu();
 		if (! sellingService.postNyusyutu(autoSellingNumber)){
 			event.error = sellingService.getMessage();
 			return event;

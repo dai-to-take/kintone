@@ -31,15 +31,23 @@ CommonService.prototype = {
 	  return this.keyVal;
 	},
 	
+	getSlipNumber: function() {
+	  return this.slipNumber;
+	},
+	getRecordData: function() {
+	  return this.recordData;
+	},
 	/***************************************/
 	/* API関連                             */
 	/***************************************/
 	/**
 	 * データ取得用ＡＰＩ実行
-	 * @param apiUrl API実行URLを設定
+	 * @param appId 
+	 * @param query 
 	 * @return {boolean} 
 	 */
-	fncGetRecords: function(apiUrl) {
+	fncGetRecords: function(appId , query) {
+		apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ appId + '&query=' + encodeURI(query);
 		return this._fncExecutApi("GET", apiUrl , null);
 	},
 	/**
@@ -65,6 +73,14 @@ CommonService.prototype = {
 	 */
 	fntPutRecord: function(param) {
 		return this._fncExecutApi("PUT", kintone.api.url('/k/v1/record') ,param);
+	},
+	/**
+	 * データ更新用ＡＰＩ実行（複数)
+	 * @param param パラメーターを設定
+	 * @return {boolean} 
+	 */
+	fntPutRecords: function(param) {
+		return this._fncExecutApi("PUT", kintone.api.url('/k/v1/records') ,param);
 	},
 	_fncExecutApi: function(name , url , param) {
 
@@ -104,7 +120,137 @@ CommonService.prototype = {
 	},
 
 	/***************************************/
-	/* 共通系関連                          */
+	/* 伝票採番関連                        */
+	/***************************************/
+	fncMakeSlipNumber: function(DateName , SlipNumName , SlipKbn ,  ReferenceDate) {
+		// クエリー作成
+		var wQuery = DateName + ' >= "' + this.fncGetStartDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
+				'" and ' + DateName + ' <"' + this.fncGetEndDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by ' + SlipNumName + ' limit 1';
+		
+		// API実行
+		if (this.fncGetRecords(kintone.app.getId() , wQuery)){
+			var jsonObj = this.getJsonObj();
+			// 新規DeliveryNumberを取得
+			if (this.fncGetMaxNumber(jsonObj,SlipNumName,-3)){
+				this.slipNumber = SlipKbn + this.fncGetYmd(ReferenceDate) + ('000' + this.getRecNo()).slice(-3);
+				this.message = '伝票番号が取得できました';
+				return true;
+			} else {
+				this.message = '伝票番号が取得できません。';
+				return false;
+			}
+		}else {
+			this.message = '伝票番号が取得できません。';
+			return false;
+		}
+		
+	},
+	fncMakeIdoNumber: function(ReferenceDate) {
+		// クエリー作成
+		var wQuery = 'IdoDate >= "' + this.fncGetStartDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
+				'" and IdoDate <"' + this.fncGetEndDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by IdoNumber limit 1';
+		
+		// API実行
+		if (this.fncGetRecords(_APPID.IDO , wQuery)){
+			var jsonObj = this.getJsonObj();
+			// 新規DeliveryNumberを取得
+			if (this.fncGetMaxNumber(jsonObj,'IdoNumber' , -5)){
+				this.message = '基準番号が取得できました';
+				return true;
+			} else {
+				this.message = '基準番号が取得できません。';
+				return false;
+			}
+		}else {
+			this.message = '基準番号が取得できません。';
+			return false;
+		}
+		
+	},
+	fncGetIdoNumber: function(ReferenceDate , ReferenceNumber) {
+	  return _SILPNUM.NST + this.fncGetYmd(ReferenceDate) + ('00000' + ReferenceNumber).slice(-5);
+	},
+	/***************************************/
+	/* 日付関連関数                        */
+	/***************************************/
+	fncGetStartDate: function(ReferenceDate) {
+		var referenceDate = moment(ReferenceDate);
+		// 該当月の開始日を生成
+		return moment(new Date(referenceDate.year() , referenceDate.month(), '1'));
+	},
+	fncGetEndDate: function(ReferenceDate) {
+		var referenceDate = moment(ReferenceDate);
+		// 該当月の終了日を生成
+		return moment(new Date(referenceDate.year() , referenceDate.month() + 1 , '1'));
+	},
+	fncGetFormatDate: function(ReferenceDate , Format) {
+		var referenceDate = moment(ReferenceDate);
+		// フォーマット変換
+		return referenceDate.format(Format);
+	},
+	
+	/***************************************/
+	/* 入力チェック                        */
+	/***************************************/
+	// 処理日より未来での変更があるか?
+	fncItemCheck: function(ItemCd , ReferenceDate) {
+		// クエリー作成
+		var wQuery = 'ItemCdLU = "' + ItemCd + '" and IdoDate > "' + this.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
+		// 今回の処理日より未来での変更があるか？
+		if (this.fncGetRecords(_APPID.IDO , wQuery)){
+			var jsonObj = this.getJsonObj();
+			if (this.fncIsExistence(jsonObj)){
+				return _CHECK.YES;
+			} else {
+				return _CHECK.NO;
+			}
+		} else {
+			this.message = '商品チェックが失敗しました。';
+			return _CHECK.ERROR;
+		}
+	},
+	// 移動履歴の存在チェック
+	fncIdoCheck: function(SlipNumber) {
+		// クエリー作成
+		var wQuery = 'SlipNumber = "' + SlipNumber + '"';
+		// すでに登録済みか？
+		if (this.fncGetRecords(_APPID.IDO , wQuery)){
+			var jsonObj = this.getJsonObj();
+			if (this.fncIsExistence(jsonObj)){
+				this.message = 'すでに移動履歴に展開済みです。';
+				return _CHECK.YES;
+			} else {
+				return _CHECK.NO;
+			}
+		} else {
+			this.message = '商品チェックが失敗しました。';
+			return _CHECK.ERROR;
+		}
+	
+	},
+	/***************************************/
+	/* アプリデータの取得                  */
+	/***************************************/
+	fncGetRecordData: function(AppId , KeyName , KeyData , GetKeyName ) {
+		var wQuery = KeyName + ' = "' + KeyData + '" limit 1';
+		// 対象商品の$idを取得
+		if (this.fncGetRecords(AppId , wQuery)){
+			var jsonObj = this.getJsonObj();
+			if (this.fncGetKeyVal(jsonObj,'$id')){
+				this.recordData = this.getKeyVal();
+				return true;
+			} else {
+				this.message = '対象商品がが得できません。';
+				return false;
+			}
+		} else {
+			this.message = '対象商品がが得できません。';
+			return false;
+		}
+	},
+	
+	/***************************************/
+	/* 共通系                              */
 	/***************************************/
 	fncGetMaxNumber: function(jsonObj , keyVal , cutNum) {
 		var obj = JSON.parse(jsonObj);

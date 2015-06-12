@@ -11,6 +11,9 @@ ItemService.prototype = {
 		
 		this.record = record;
 
+		// サービス初期化
+		this.commonService = new CommonService();
+		
 		// 変数セット
 		this.strLocality = this.record['Locality']['value'];
 		this.strShape = this.record['Shape']['value'];
@@ -29,46 +32,15 @@ ItemService.prototype = {
 	},
 	
 	/***************************************/
-	/* 商品コード の 採番用初期処理 */
-	/***************************************/
-	initItem: function() {
-		// 初期化
-		this.recNo = 1;
-		// クリエリー作成
-		this.query = 'Locality in ("' + this.strLocality + '") and WarehouseKbnLU = "' + this.strWarehouseKbn + '" order by ItemCd limit 1';
-
-		// API用URL作成
-		this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ kintone.app.getId() + '&query=' + encodeURI(this.query);
-	},
-	/***************************************/
-	/* 在庫管理のメンテナンス処理用初期処理 */
-	/***************************************/
-	initMainteStock: function() {
-		this.offset = 0;
-		
-		this.query = 'ItemCd in ("' + this.strItemCd + '") order by レコード番号 asc limit 100 offset ';
-		
-		this.otherAppId = _APPID.STOCK;
-	},
-	/***************************************/
-	/* 入出庫管理のメンテナンス処理用初期処理 */
-	/***************************************/
-	initMainteNyusyutu: function() {
-		this.offset = 0;
-		
-		this.query = 'ItemCd = "' + this.strItemCd + '" order by レコード番号 asc limit 100 offset ';
-		
-		this.otherAppId = _APPID.NYUSYUTU;
-	},
-	
-	/***************************************/
 	/* 商品コード用の伝票番号採番            */
 	/***************************************/
 	getItemCd: function() {
-		
-		if (this._getRecords()){
+		// クエリー作成
+		var wQuery = 'Locality in ("' + this.strLocality + '") and WarehouseKbnLU = "' + this.strWarehouseKbn + '" order by ItemCd limit 1';
+		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
+			var jsonObj = this.commonService.getJsonObj();
 			// 新規ItemCdを取得
-			if (this._getMaxNumber('ItemCd')){
+			if (this.commonService.fncGetMaxNumber(jsonObj,'ItemCd',-4)){
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {
@@ -81,8 +53,27 @@ ItemService.prototype = {
 		}
 		
 	},
-	getAutoItemCd: function(shapeNm) {
-		return getWarehouseCd(this.strWarehouseCd) + getLocalNm(this.strLocality) + ('0000' + this.recNo).slice(-4);
+	getAutoItemCd: function() {
+		return this.commonService.fncGetWarehouseCd(this.strWarehouseCd) + 
+			this.commonService.fncGetLocalNm(this.strLocality) + 
+				('0000' + this.commonService.getRecNo()).slice(-4);
+	},
+	
+	/***************************************/
+	/* 在庫管理のメンテナンス処理用初期処理 */
+	/***************************************/
+	initMainteStock: function() {
+		this.query = 'ItemCd in ("' + this.strItemCd + '") order by レコード番号 asc limit 100 offset ';
+		
+		this.otherAppId = _APPID.STOCK;
+	},
+	/***************************************/
+	/* 入出庫管理のメンテナンス処理用初期処理 */
+	/***************************************/
+	initMainteNyusyutu: function() {
+		this.query = 'ItemCd = "' + this.strItemCd + '" order by レコード番号 asc limit 100 offset ';
+		
+		this.otherAppId = _APPID.NYUSYUTU;
 	},
 	
 	/***************************************/
@@ -92,26 +83,24 @@ ItemService.prototype = {
 	
 		var records = new Array();
 		var loopendflg = false;
+		var offset = 0;
 		
 		while(!loopendflg){
-			// クリエリー作成
-			var workQuery = this.query  + this.offset;
-			// API用URL作成
-			this.apiUrl = kintone.api.url('/k/v1/records',true) + '?app='+ this.otherAppId + '&query=' + encodeURI(workQuery);
-
+			// クエリー作成
+			var workQuery = this.query  + offset;
 			// 同期リクエストを行う
-			if (!this._getRecords()) {
+			if (this.commonService.fncGetRecords(this.otherAppId , workQuery)){
 				this.message = '商品コードのメンテナンスに失敗しました。';
 				return false;
 			}
 		
 			//取得したレコードをArrayに格納
-			var respdata = JSON.parse(this.jsonObj);
+			var respdata = JSON.parse(this.commonService.getJsonObj());
 			if(respdata.records.length > 0){
 				for(var i = 0; respdata.records.length > i; i++){
 					records.push(respdata.records[i]);
 				}
-				this.offset += respdata.records.length;
+				offset += respdata.records.length;
 			}else{
 				loopendflg = true;
 			}
@@ -126,7 +115,7 @@ ItemService.prototype = {
 		}
 		
 		if(records.length > 0){
-			if (! this._updateLookup(queryObj)){
+			if (! this.commonService.fntPutRecords(queryObj)){
 				return false;
 			}
 		}
@@ -184,76 +173,6 @@ ItemService.prototype = {
 			queryObj["records"].push(partObj);
 	    }
 		return queryObj;
-	},
-	
-	_updateLookup: function(queryObj) {
-		var putparams = queryObj;
-
-		// CSRFトークンの取得
-		var token = kintone.getRequestToken();
-		putparams["__REQUEST_TOKEN__"] = token; 
-		
-		// 同期リクエストを行う
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.open('PUT', kintone.api.url('/k/v1/records'), false);
-		xmlHttp.setRequestHeader('Content-Type', 'application/json');
-		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-
-		xmlHttp.send(JSON.stringify(putparams));
-		if (xmlHttp.status == 200){
-			var obj = JSON.parse(xmlHttp.responseText);
-			this.message = xmlHttp.status + '：更新に成功しました。';
-			return true;
-		} else {
-			this.message = xmlHttp.status + '：更新エラー';
-			return false;
-		}
-	},
-	
-	_getRecords: function() {
-		var xmlHttp = new XMLHttpRequest();
-		// 同期リクエストを行う
-		xmlHttp.open("GET", this.apiUrl, false);
-		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
-		xmlHttp.send(null);
-		
-		if (xmlHttp.status == 200){
-			if(window.JSON){
-				this.status = "00";
-				this.jsonObj = xmlHttp.responseText;
-				return true;
-			} else {
-				this.status = "80";
-				this.message = xmlHttp.statusText;
-				return false;
-			}
-		} else {
-			this.status = "90";
-			this.message = 'コードが取得できません。';
-			return false;
-		}
-	},
-	_getMaxNumber: function(keyVal) {
-		var obj = JSON.parse(this.jsonObj);
-		if (obj.records[0] != null){
-			try{
-				var strGetVal = '';
-				for ( var keyA in obj.records ) {
-					for ( var keyB in obj.records[keyA] ) {
-						if (keyB == keyVal){
-							strGetVal = obj.records[keyA][keyB].value;
-						}
-					}
-				}
-
-				this.recNo = parseInt(strGetVal.slice(-4),10) +1;
-				
-			} catch(e){
-				this.message = '伝票番号が取得できません。';
-				return false;
-			}
-		}
-		return true;
 	}
 }
 
