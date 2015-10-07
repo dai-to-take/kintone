@@ -1,15 +1,14 @@
-/* purchaseApp.js */
+/* returnApp.js */
 (function() {
 	'use strict';
 
-	// 検索条件調査
 	//kintone.events.on(['app.record.index.show'], function (event) {
 	//	var query= kintone.app.getQuery();
 	//	console.log(query);
 	//});
 	
 	// レコード追加、編集画面の表示前処理
-	// 仕入伝票のdisabled化
+	// 商品コードのdisabled化
 	var eventsShow = [
 				'app.record.create.show',
 				'app.record.edit.show',
@@ -20,9 +19,9 @@
 		var record = event.record;
 
 		if (('app.record.create.show').indexOf(event.type) >= 0){
-			record['PurchaseNumber']['value'] = "";
+			record['ReturnNumber']['value'] = "";
 		}
-		record['PurchaseNumber']['disabled'] = true;
+		record['ReturnNumber']['disabled'] = true;
 
 		return event;
 	});
@@ -49,39 +48,33 @@
 
 	kintone.events.on(eventAdd, function(event) {
         var record = event.record;
-		var autoPurchaseNumber = ""
+		var autoReturnNumber = ""
 
 		// サービス初期化
-		var purchaseService = new PurchaseService(record);
+		var returnService = new ReturnService(record);
 
 		// 伝票番号の採番
-		if (purchaseService.getPurchaseNumber()){
-			// 採番したSlipNumberを設定
-			autoPurchaseNumber  = purchaseService.getAutoPurchaseNumber();
-			record['PurchaseNumber']['value'] = autoPurchaseNumber;
+		if (returnService.getReturnNumber()){
+			// 採番したReturnNumberを設定
+			autoReturnNumber  = returnService.getAutoReturnNumber();
+			record['ReturnNumber']['value'] = autoReturnNumber;
 		} else {
-			event.error = purchaseService.getMessage();
+			event.error = returnService.getMessage();
 			return event;
 		}
 		
-		// 移動履歴の登録
-		if (! purchaseService.postMovement(autoPurchaseNumber)){
-			event.error = purchaseService.getMessage();
+		// 入出庫履歴の登録
+		if (! returnService.postMovement(autoReturnNumber)){
+			event.error = returnService.getMessage();
 			return event;
 		};
 		
 		// 商品マスタの更新
-		if (! purchaseService.putItem()){
-			event.error = purchaseService.getMessage();
+		if (! returnService.putItem()){
+			event.error = returnService.getMessage();
 			return event;
 		};
-		
-		// 在庫の登録・更新
-		if (! purchaseService.putZaiko()){
-			event.error = purchaseService.getMessage();
-			return event;
-		};
-		
+
 		return event;
 	});
 	

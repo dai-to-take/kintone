@@ -15,7 +15,8 @@ Object.freeze(_CHECK);
 
 var _APPID = {
   'IDO': 127,
-  'ITEM': 120
+  'ITEM': 120,
+  'ZAIKO': 122
 };
 Object.freeze(_APPID);
 

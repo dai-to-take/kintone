@@ -232,24 +232,36 @@ CommonService.prototype = {
 	/***************************************/
 	/* アプリデータの取得                  */
 	/***************************************/
-	fncGetRecordData: function(AppId , KeyName , KeyData , GetKeyName ) {
+	// キー固定
+	fncGetRecordDataKey: function(AppId , KeyName , KeyData) {
 		var wQuery = KeyName + ' = "' + KeyData + '" limit 1';
+		if (! this.fncGetRecords(AppId , wQuery)){
+			this.message = '対象情報が取得できません。';
+			return false;
+		}
+		return true;
+	},
+	// クエリ―作成
+	fncGetRecordDataQry: function(AppId , Query ) {
+		var wQuery = Query + ' limit 1';
 		// 対象商品の$idを取得
-		if (this.fncGetRecords(AppId , wQuery)){
-			var jsonObj = this.getJsonObj();
-			if (this.fncGetKeyVal(jsonObj,'$id')){
-				this.recordData = this.getKeyVal();
-				return true;
-			} else {
-				this.message = '対象商品がが得できません。';
-				return false;
-			}
+		if (! this.fncGetRecords(AppId , wQuery)){
+			this.message = '対象情報が取得できません。';
+			return false;
+		}
+		return true;
+	},
+	// キーから取得
+	fncSetKeyData: function(GetKeyName ) {
+		var jsonObj = this.getJsonObj();
+		if (this.fncGetKeyVal(jsonObj,GetKeyName)){
+			this.recordData = this.getKeyVal();
+			return true;
 		} else {
-			this.message = '対象商品がが得できません。';
+			this.message = '対象キー情報が取得できません。';
 			return false;
 		}
 	},
-	
 	/***************************************/
 	/* 共通系                              */
 	/***************************************/

@@ -1,15 +1,14 @@
-/* purchaseApp.js */
+/* sellingApp.js */
 (function() {
 	'use strict';
 
-	// 検索条件調査
 	//kintone.events.on(['app.record.index.show'], function (event) {
 	//	var query= kintone.app.getQuery();
 	//	console.log(query);
 	//});
 	
 	// レコード追加、編集画面の表示前処理
-	// 仕入伝票のdisabled化
+	// 商品コードのdisabled化
 	var eventsShow = [
 				'app.record.create.show',
 				'app.record.edit.show',
@@ -20,9 +19,9 @@
 		var record = event.record;
 
 		if (('app.record.create.show').indexOf(event.type) >= 0){
-			record['PurchaseNumber']['value'] = "";
+			record['SellingNumber']['value'] = "";
 		}
-		record['PurchaseNumber']['disabled'] = true;
+		record['SellingNumber']['disabled'] = true;
 
 		return event;
 	});
@@ -44,44 +43,38 @@
 	// レコード追加画面の保存前処理
 	// 伝票番号の採番
 	var eventAdd = [
+//				'app.record.detail.show'
 				'app.record.create.submit'
 				];
 
 	kintone.events.on(eventAdd, function(event) {
         var record = event.record;
-		var autoPurchaseNumber = ""
+		var autoSellingNumber = ""
 
 		// サービス初期化
-		var purchaseService = new PurchaseService(record);
-
+		var sellingService = new SellingService(record);
 		// 伝票番号の採番
-		if (purchaseService.getPurchaseNumber()){
-			// 採番したSlipNumberを設定
-			autoPurchaseNumber  = purchaseService.getAutoPurchaseNumber();
-			record['PurchaseNumber']['value'] = autoPurchaseNumber;
+		if (sellingService.getSellingNumber()){
+			// 採番したSellingNumberを設定
+			autoSellingNumber  = sellingService.getAutoSellingNumber();
+			record['SellingNumber']['value'] = autoSellingNumber;
 		} else {
-			event.error = purchaseService.getMessage();
+			event.error = sellingService.getMessage();
 			return event;
 		}
 		
-		// 移動履歴の登録
-		if (! purchaseService.postMovement(autoPurchaseNumber)){
-			event.error = purchaseService.getMessage();
+		// 入出庫履歴の登録
+		if (! sellingService.postMovement(autoSellingNumber)){
+			event.error = sellingService.getMessage();
 			return event;
 		};
 		
 		// 商品マスタの更新
-		if (! purchaseService.putItem()){
-			event.error = purchaseService.getMessage();
+		if (! sellingService.putItem()){
+			event.error = sellingService.getMessage();
 			return event;
 		};
-		
-		// 在庫の登録・更新
-		if (! purchaseService.putZaiko()){
-			event.error = purchaseService.getMessage();
-			return event;
-		};
-		
+
 		return event;
 	});
 	
