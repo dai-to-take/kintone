@@ -106,7 +106,7 @@ MovementService.prototype = {
 			cntNyusyutu++;
 		}
 		
-		if (this.commonService.fncPostRecord(queryObj)){
+		if (this.commonService.fncPostRecords(queryObj)){
 			this.message = '移動履歴が登録されました';
 			return true;
 		} else {
@@ -138,7 +138,7 @@ MovementService.prototype = {
 				if (this.commonService.fncSetKeyData('$id')) {
 					itemCdId = this.commonService.getRecordData();
 				} else {
-					this.message = '対象商品が取得できません。';
+					this.message = '対象商品idが取得できません。';
 					return false;
 				}
 			} else {
@@ -199,74 +199,153 @@ MovementService.prototype = {
 	fncPutZaiko: function(SlipKbn , ReferenceDate) {
 		for (var i = 0; i < this.tableRecords.length; i++) {
 			// 変数初期化
-			var itemCdId = '';
 			var updateItemCd = this.tableRecords[i].value['ItemCdLU'].value;  // 対象商品
 
-			var motoLocationCd  = this.record['WarehouseCdLU']['value']; // 移動元
-			var sakiLocationCd  = this.record['WarehouseCdLU']['value']; // 移動先
-
-			// 商品とロケーションの組み合わせで在庫の存在確認
-			var wQuery = 'ItemCdLU = "' + updateItemCd + '" and LocationCdLU = "' + sakiLocationCd + '"';
-			if (this.commonService.fncGetRecordDataQry(_APPID.ZAIKO , wQuery)) {
-				if (this.commonService.fncSetKeyData('$id')) {
-					itemCdId = this.commonService.getRecordData();
-				} else {
-					this.message = '対象情報が取得できません。';
+			var motoLocationCd  = ''; // 移動元
+			var sakiLocationCd  = ''; // 移動先
+			
+			var office = this.record['Office']['value'];
+			
+			// 出庫（減算減算処理）
+			switch (SlipKbn) {
+				case _SILPNUM.PURCH:
+					break;
+				case _SILPNUM.DELV:
+					motoLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
+					break;
+				case _SILPNUM.SELL:
+					motoLocationCd  = this.record['DeliveryCdLU']['value']; // 販売元
+					break;
+				case _SILPNUM.RETURN:
+					motoLocationCd  = this.record['CustomerCdLU']['value']; // 顧客
+					break;
+				default:
+					motoLocationCd  = ''
+					break;
+			};	
+			if (motoLocationCd != ''){
+				if(! this.fncUpsertZaiko(_CALKBN.SUB , ReferenceDate , updateItemCd , motoLocationCd , office)){
 					return false;
 				}
-			} else {
-				this.message = '対象情報が取得できません。';
-				return false;
 			}
 			
-			if (itemCdId == '') {
-			// 存在しない場合
-				// 登録用パラメータを作成
-				var queryObj = new Object();
-				queryObj["app"] = _APPID.ZAIKO;
-				
-				var partObj = new Object();
-				queryObj["record"] = partObj;
-				
-				partObj["Office"] = {value: this.record['Office']['value']};	// 事業所
-				partObj["ItemCdLU"] = {value: updateItemCd};	// 商品コード
-				
-				partObj["LocationCdLU"] = {value: sakiLocationCd};	// ロケーションコード
-				
-				partObj["StockQuantity"] = {value: 1};	// 在庫数量
-				partObj["NyukoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD")};	// 入庫日
-				partObj["SyukoDate"] = {value: ''};	// 出庫日
+			// 入庫（在庫加算処理）
+			switch (SlipKbn) {
+				case _SILPNUM.PURCH:
+					sakiLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
+					break;
+				case _SILPNUM.DELV:
+					sakiLocationCd  = this.record['DeliveryCdLU']['value']; // 納入先
+					break;
+				case _SILPNUM.SELL:
+					break;
+				case _SILPNUM.RETURN:
+					sakiLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
+					break;
+				default:
+					sakiLocationCd  = ''
+					break;
+			};	
+			if (sakiLocationCd != ''){
+				if(! this.fncUpsertZaiko(_CALKBN.ADD , ReferenceDate , updateItemCd , sakiLocationCd , office)){
+					return false;
+				}
+			}
 			
-				if (this.commonService.fncPostRecord(queryObj)){
-					this.message = '在庫が登録されました';
-					return true;
-				} else {
-					this.message = '在庫の登録が失敗しました';
-					return false;
-				}
+		}
+		return true;
+	},
+	fncUpsertZaiko: function(CalKbn , ReferenceDate , ItemCd , LocationCd , Office) {
+		// ActKbn:0(加算) , 1(減産)
+
+		// 変数初期化
+		var itemCdId = '';
+		var stockQuantity = 0;
+			
+		// 商品とロケーションの組み合わせで在庫の存在確認
+		var wQuery = 'ItemCdLU = "' + ItemCd + '" and LocationCdLU = "' + LocationCd + '"';
+		if (this.commonService.fncGetRecordDataQry(_APPID.ZAIKO , wQuery)) {
+			// 商品$idを取得
+			if (this.commonService.fncSetKeyData('$id')) {
+				itemCdId = this.commonService.getRecordData();
 			} else {
-			// 在庫が存在する場合
-				
-				// 更新用パラメータを作成
-				var queryObj = new Object();
-				queryObj["app"] = _APPID.ZAIKO;
-				queryObj["id"] = itemCdId;
-				
-				var partObj = new Object();
-				queryObj["record"] = partObj;
-				
-				partObj["StockQuantity"] = {value: 1};	// 在庫数量
-				
+				this.message = '商品$idが取得できません。';
+				return false;
+			}
+			// 現在数を取得
+			if (this.commonService.fncSetKeyData('StockQuantity')) {
+				stockQuantity = this.commonService.getRecordData();
+			} else {
+				this.message = '現在数が取得できません。';
+				return false;
+			}
+		} else {
+			this.message = '対象レコード取得エラー';
+			return false;
+		}
+		console.log('CalKbn=>' + CalKbn);
+		console.log('ItemCd=>' + ItemCd);
+		console.log('LocationCd=>' + LocationCd);
+		console.log('itemCdId=>' + itemCdId);
+		console.log('stockQuantity=>' + itemCdId);
+		if (itemCdId == '') {
+		// 存在しない場合
+			// 登録用パラメータを作成
+			var queryObj = new Object();
+			queryObj["app"] = _APPID.ZAIKO;
+			
+			var partObj = new Object();
+			queryObj["record"] = partObj;
+			
+			partObj["Office"] = {value: Office};	// 事業所
+			partObj["ItemCdLU"] = {value: ItemCd};	// 商品コード
+			
+			partObj["LocationCdLU"] = {value: LocationCd};	// ロケーションコード
+			
+			partObj["StockQuantity"] = {value: 1};	// 在庫数量
+			
+			if(_CALKBN.SUB == CalKbn){
+				// 出庫の場合
+				partObj["SyukoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD")};	// 出庫日
+			} else {
+				// 入庫の場合
 				partObj["NyukoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD")};	// 入庫日
-				partObj["SyukoDate"] = {value: ''};	// 出庫日
-				
-				// 更新実行
-				if (this.commonService.fntPutRecord(queryObj)){
-					this.message = '在庫が更新されました';
-				} else {
-					this.message = '在庫の更新が失敗しました';
-					return false;
-				}
+			}
+		
+			if (this.commonService.fncPostRecord(queryObj)){
+				this.message = '在庫が登録されました';
+				return true;
+			} else {
+				this.message = '在庫の登録が失敗しました';
+				return false;
+			}
+		} else {
+		// 在庫が存在する場合
+			// 更新用パラメータを作成
+			var queryObj = new Object();
+			queryObj["app"] = _APPID.ZAIKO;
+			queryObj["id"] = itemCdId;
+			
+			var partObj = new Object();
+			queryObj["record"] = partObj;
+			
+			
+			if(_CALKBN.SUB == CalKbn){
+				// 出庫の場合
+				partObj["SyukoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD")};	// 出庫日
+				partObj["StockQuantity"] = {value: eval(stockQuantity) - 1};	// 在庫数量
+			} else {
+				// 入庫の場合
+				partObj["NyukoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD")};	// 入庫日
+				partObj["StockQuantity"] = {value: eval(stockQuantity) + 1};	// 在庫数量
+			}
+			
+			// 更新実行
+			if (this.commonService.fntPutRecord(queryObj)){
+				this.message = '在庫が更新されました';
+			} else {
+				this.message = '在庫の更新が失敗しました';
+				return false;
 			}
 		}
 		return true;

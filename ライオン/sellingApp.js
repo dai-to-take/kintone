@@ -8,7 +8,6 @@
 	//});
 	
 	// レコード追加、編集画面の表示前処理
-	// 商品コードのdisabled化
 	var eventsShow = [
 				'app.record.create.show',
 				'app.record.edit.show',
@@ -17,26 +16,25 @@
 
 	kintone.events.on(eventsShow, function (event) {
 		var record = event.record;
-
-		if (('app.record.create.show').indexOf(event.type) >= 0){
-			record['SellingNumber']['value'] = "";
-		}
-		record['SellingNumber']['disabled'] = true;
-
-		return event;
-	});
-
-	// レコード追加、編集画面の表示前処理
-	// 事業所のdisabled化
-	var eventsEdit = [
-				'app.record.edit.show',
-				'app.record.index.edit.show'
-				];
-
-	kintone.events.on(eventsEdit, function (event) {
-		var record = event.record;
-		record['Office']['disabled'] = true;
+		var commonService = new CommonService();
 		
+		// 共通
+		record['SellingNumber']['disabled'] = true;
+		
+		// アクション別
+		switch (true) {
+			case ('app.record.create.show').indexOf(event.type) >= 0:
+				record['SellingNumber']['value'] = "";
+				record['Office']['value'] = commonService.fncGetTantoOffice();
+				break;
+			case ('app.record.edit.show').indexOf(event.type) >= 0:
+			case ('app.record.index.edit.show').indexOf(event.type) >= 0:
+				record['Office']['disabled'] = true;
+				break;
+			default:
+				break;
+		}
+
 		return event;
 	});
 	
@@ -63,17 +61,11 @@
 			return event;
 		}
 		
-		// 入出庫履歴の登録
-		if (! sellingService.postMovement(autoSellingNumber)){
-			event.error = sellingService.getMessage();
+		// 関連情報登録（移動履歴、商品マスタ、在庫更新）
+		if (! sellingService.setRelationInfo(autoSellingNumber)) {
+			event.error = purchaseService.getMessage();
 			return event;
-		};
-		
-		// 商品マスタの更新
-		if (! sellingService.putItem()){
-			event.error = sellingService.getMessage();
-			return event;
-		};
+		}
 
 		return event;
 	});

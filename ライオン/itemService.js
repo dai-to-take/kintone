@@ -32,7 +32,7 @@ ItemService.prototype = {
 	/***************************************/
 	getItemCd: function() {
 		// クエリー作成
-		var wQuery = 'Office in ("' + this.strOffice + '")  order by ItemCd limit 1';
+		var wQuery = 'Office in ("' + this.strOffice + '")  order by ItemCd desc limit 1';
 		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.commonService.getJsonObj();
 			// 新規ItemCdを取得
@@ -50,8 +50,15 @@ ItemService.prototype = {
 		
 	},
 	getAutoItemCd: function() {
+		var intRecNo = this.commonService.getRecNo();
+		if (this.commonService.fncGetOffice(this.strOffice) == _OFFICE.LION){
+			if(intRecNo == 1){
+				intRecNo = intRecNo + 50000;
+			}
+		}
+	
 		return this.commonService.fncGetOffice(this.strOffice) + 
-				('00000' + this.commonService.getRecNo()).slice(-5);
+				('00000' + intRecNo).slice(-5);
 	}
 	
 }

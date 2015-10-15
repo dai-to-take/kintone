@@ -29,7 +29,7 @@ LocationService.prototype = {
 	/***************************************/
 	getLocationCd: function(keyVal) {
 		// クエリー作成
-		var wQuery = 'LocationKbn in ("' + this.strLocationKbn+ '")  order by LocationCd limit 1';
+		var wQuery = 'LocationKbn in ("' + this.strLocationKbn+ '")  order by LocationCd desc limit 1';
 		// API実行
 		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.commonService.getJsonObj();

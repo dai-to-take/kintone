@@ -54,6 +54,38 @@ var _CONDKBN = {
 };
 Object.freeze(_CONDKBN);
 
+var _OFFICE = {
+  'SILK': 'SA',
+  'LION': 'LR'
+};
+Object.freeze(_OFFICE);
+
+var _OFFICEYEAR = {
+  'SILK': 4,
+  'LION': 5
+};
+Object.freeze(_OFFICEYEAR);
+
+var _CALKBN = {
+  'ADD': 'ADDIND',
+  'SUB': 'SUBTRANCTION'
+};
+Object.freeze(_CALKBN);
+
+var _OFFICENAME = {
+  'LION': 'ライオンラグス',
+  'SILK': 'シルクラアジア'
+};
+Object.freeze(_OFFICENAME);
+
+var _USEROFFICE = {
+  'to-take': _OFFICENAME.SILK,
+  '2sg-share': _OFFICENAME.LION,
+  'lion': _OFFICENAME.LION
+};
+Object.freeze(_USEROFFICE);
+
+
 // ヌーリ工房（nuri）
 // ジェッディ工房（Jeddi）
 // セイエディアン工房（Seyediyan）

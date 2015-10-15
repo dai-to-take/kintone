@@ -51,41 +51,27 @@ PurchaseService.prototype = {
 	},
 	
 	/***************************************/
-	/* 移動履歴の登録                    */
+	/* 関連情報の更新                      */
 	/***************************************/
-	postMovement: function(autoPurchaseNumber) {
-		if (this.movementService.fncPostMovement(_SILPNUM.PURCH , this.strPurchaseDate , autoPurchaseNumber)) {
-			this.message = this.movementService.getMessage();
-			return true;
-		} else {
+	setRelationInfo: function(autoPurchaseNumber) {
+		// 移動履歴の登録
+		if (! this.movementService.fncPostMovement(_SILPNUM.PURCH , this.strPurchaseDate , autoPurchaseNumber)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
-	},
-	
-	/***************************************/
-	/* 商品の更新                          */
-	/***************************************/
-	putItem: function() {
-		if (this.movementService.fncPutItem(_SILPNUM.PURCH , this.strPurchaseDate)) {
-			this.message = this.movementService.getMessage();
-			return true;
-		} else {
+		
+		// 在庫の更新
+		if (! this.movementService.fncPutZaiko(_SILPNUM.PURCH , this.strPurchaseDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
-	},
-	
-	/***************************************/
-	/* 在庫の更新                          */
-	/***************************************/
-	putZaiko: function() {
-		if (this.movementService.fncPutZaiko(_SILPNUM.PURCH , this.strPurchaseDate)) {
-			this.message = this.movementService.getMessage();
-			return true;
-		} else {
+		
+		// 商品の更新
+		if (! this.movementService.fncPutItem(_SILPNUM.PURCH , this.strPurchaseDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
+		
+		return true;
 	}
 }

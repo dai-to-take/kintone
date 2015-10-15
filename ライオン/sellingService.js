@@ -51,28 +51,27 @@ SellingService.prototype = {
 	},
 
 	/***************************************/
-	/* 入出庫履歴の登録                    */
+	/* 関連情報の更新                      */
 	/***************************************/
-	postMovement: function(autoSellingNumber) {
-		if (this.movementService.fncPostMovement(_SILPNUM.SELL , this.strSellingDate , autoSellingNumber)) {
-			this.message = this.movementService.getMessage();
-			return true;
-		} else {
+	setRelationInfo: function(autoSellingNumber) {
+		// 移動履歴の登録
+		if (! this.movementService.fncPostMovement(_SILPNUM.SELL , this.strSellingDate , autoSellingNumber)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
-	},
-
-	/***************************************/
-	/* 商品の更新                          */
-	/***************************************/
-	putItem: function() {
-		if (this.movementService.fncPutItem(_SILPNUM.SELL , this.strSellingDate)) {
-			this.message = this.movementService.getMessage();
-			return true;
-		} else {
+		
+		// 在庫の更新
+		if (! this.movementService.fncPutZaiko(_SILPNUM.SELL , this.strSellingDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
+		
+		// 商品の更新
+		if (! this.movementService.fncPutItem(_SILPNUM.SELL , this.strSellingDate)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
+		return true;
 	}
 }

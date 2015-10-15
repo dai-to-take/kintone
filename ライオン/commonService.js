@@ -124,16 +124,17 @@ CommonService.prototype = {
 	/***************************************/
 	fncMakeSlipNumber: function(DateName , SlipNumName , SlipKbn ,  ReferenceDate , Office ) {
 		// クエリー作成
-		var wQuery = DateName + ' >= "' + this.fncGetStartDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
-				'" and ' + DateName + ' <"' + this.fncGetEndDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
-				'" and Office in ("' + Office + '") order by ' + SlipNumName + ' limit 1';
+		var wQuery = DateName + ' >= "' + this.fncGetStartNen(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
+				'" and ' + DateName + ' <"' + this.fncGetEndNen(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
+				'" and Office in ("' + Office + '") order by ' + SlipNumName + ' desc limit 1';
 		
 		// API実行
 		if (this.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.getJsonObj();
+			var strNend = ('00' + this.funGetNendo(ReferenceDate , Office)).slice(-2);
 			// 新規SlipNumberを取得
 			if (this.fncGetMaxNumber(jsonObj,SlipNumName,-3)){
-				this.slipNumber = SlipKbn + this.fncGetOffice(Office) + this.fncGetYmd(ReferenceDate) + ('0000' + this.getRecNo()).slice(-4);
+				this.slipNumber = SlipKbn + this.fncGetOffice(Office) + strNend + ('0000' + this.getRecNo()).slice(-4);
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {
@@ -149,7 +150,7 @@ CommonService.prototype = {
 	fncMakeIdoNumber: function(ReferenceDate) {
 		// クエリー作成
 		var wQuery = 'IdoDate >= "' + this.fncGetStartDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
-				'" and IdoDate <"' + this.fncGetEndDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by IdoNumber limit 1';
+				'" and IdoDate <"' + this.fncGetEndDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by IdoNumber desc limit 1';
 		
 		// API実行
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
@@ -169,7 +170,7 @@ CommonService.prototype = {
 		
 	},
 	fncGetIdoNumber: function(ReferenceDate , ReferenceNumber) {
-	  return _SILPNUM.NST + this.fncGetYmd(ReferenceDate) + ('00000' + ReferenceNumber).slice(-5);
+	  return _SILPNUM.NST + this.fncGetFormatDate(ReferenceDate , 'YYMM') + ('0000' + ReferenceNumber).slice(-4);
 	},
 	/***************************************/
 	/* 日付関連関数                        */
@@ -184,12 +185,46 @@ CommonService.prototype = {
 		// 該当月の終了日を生成
 		return moment(new Date(referenceDate.year() , referenceDate.month() + 1 , '1'));
 	},
+	
+	fncGetStartNen: function(ReferenceDate , strOffice) {
+		var referenceDate = moment(ReferenceDate);
+		// 該当月から年の開始日を生成
+		if (this.fncGetOffice(strOffice) == _OFFICE.LION){
+			var refYear = _OFFICEYEAR.LION;
+		} else {
+			var refYear = _OFFICEYEAR.SILK;
+		}
+		return moment(new Date(this.funGetNendo(ReferenceDate , strOffice) , refYear , '1'));
+	},
+	fncGetEndNen: function(ReferenceDate , strOffice) {
+		var referenceDate = moment(ReferenceDate);
+		// 該当月の年の終了日を生成
+		if (this.fncGetOffice(strOffice) == _OFFICE.LION){
+			var refYear = _OFFICEYEAR.LION;
+		} else {
+			var refYear = _OFFICEYEAR.SILK;
+		}
+		return moment(new Date(this.funGetNendo(ReferenceDate , strOffice) + 1 , refYear , '1'));
+	},
+	
+	funGetNendo: function(ReferenceDate ,strOffice) {
+		var referenceDate = moment(ReferenceDate);
+		// 年度を取得
+		y = parseInt(referenceDate.year());
+		m = parseInt(referenceDate.month());
+		
+		if (this.fncGetOffice(strOffice) == _OFFICE.LION){
+			if ((m >= _OFFICEYEAR.LION ) && ( m <= 12)) return y; else return y-1;
+		} else {
+			if ((m >= _OFFICEYEAR.SILK ) && ( m <= 12)) return y; else return y-1;
+		}
+	},
+	
 	fncGetFormatDate: function(ReferenceDate , Format) {
 		var referenceDate = moment(ReferenceDate);
 		// フォーマット変換
 		return referenceDate.format(Format);
 	},
-	
 	/***************************************/
 	/* 入力チェック                        */
 	/***************************************/
@@ -318,68 +353,34 @@ CommonService.prototype = {
 		}
 	},
 	/***************************************/
+	/* 事業所                              */
+	/***************************************/
+	// 担当事業所を取得
+	fncGetTantoOffice: function() {
+		// ログインユーザーを取得
+		var user = kintone.getLoginUser();
+		if (user.code in _USEROFFICE) {
+			return _USEROFFICE[user.code];
+		} else {
+			return '';
+		}
+	},
+	/***************************************/
 	/* 文字変換                            */
 	/***************************************/
 	// 産地名称（略称）変換関数
 	fncGetLocalNm: function(strLocality) {
 		return strLocality.slice(strLocality.lastIndexOf("(") + 1 , strLocality.lastIndexOf("(") + 4);
 	},
-	// 形状変換（名称⇒コード）関数
-	fncGetShapeCd: function(strShape) {
-		switch (strShape) {
-			case '長方形':
-				var strShapeCd = "1";break;
-			case '正方形':
-				var strShapeCd = "2";break;
-			case '円形':
-				var strShapeCd = "3";break;
-			case '楕円形':
-				var strShapeCd = "4";break;
-			case '八角形':
-				var strShapeCd = "5";break;
-			case 'その他':
-				var strShapeCd = "6";break;
-			default:
-				var strShapeCd = "E";break;
-		};
-		
-		return strShapeCd;
-	},
-	// 倉庫コード変換（コード⇒略コード）関数
-	fncGetWarehouseCd: function(strWarehouseCd) {
-		switch (strWarehouseCd.slice(0, 2)) {
-			case 'WH':
-				var strGetWarehouseCd = "M";break;
-			case 'WS':
-				var strGetWarehouseCd = "A";break;
-			default:
-				var strGetWarehouseCd = "O";break;
-		};
-		
-		return strGetWarehouseCd;
-	},
-	// 倉庫区分（名称⇒コード）変換関数
-	fncGetWarehouseKbnCd: function(strWarehouseKbn) {
-		switch (strWarehouseKbn) {
-			case '自社倉庫':
-				var strWarehouseCd = "WH";break;
-			case 'ショールーム':
-				var strWarehouseCd = "WS";break;
-			default:
-				var strWarehouseCd = "WZ";break;
-		};
-		
-		return strWarehouseCd;
-	},
 	// 事業所（名称⇒コード）変換関数
 	fncGetOffice: function(strOffice) {
 		switch (strOffice) {
-			case 'ライオンラグス':
-				var strOfficeCd = "L";break;
-			case 'シルクラアジア':
-				var strOfficeCd = "S";break;
+			case _OFFICENAME.LION:
+				var strOfficeCd = _OFFICE.LION;break;
+			case _OFFICENAME.SILK:
+				var strOfficeCd = _OFFICE.SILK;break;
 			default:
-				var strOfficeCd = "Z";break;
+				var strOfficeCd = "ZZ";break;
 		};
 		
 		return strOfficeCd;

@@ -7,9 +7,18 @@
 	//	var query= kintone.app.getQuery();
 	//	console.log(query);
 	//});
+	//kintone.events.on(['app.record.create.show'], function (event) {
+	//	var record = event.record;
+	//	var commonServiceA = new CommonService();
+	//	console.log(commonServiceA.funGetNendo(record['PurchaseNumber']['value'] , 'ライオンラグス'));
+	//	
+	//	console.log(commonServiceA.fncGetStartNen(record['PurchaseNumber']['value'] , 'ライオンラグス'));
+	//	console.log(commonServiceA.fncGetEndNen(record['PurchaseNumber']['value'] , 'ライオンラグス'));
+	//	
+	//	console.log(commonServiceA.fncGetFormatDate(record['PurchaseNumber']['value'],'YYMM'));
+	//});
 	
 	// レコード追加、編集画面の表示前処理
-	// 仕入伝票のdisabled化
 	var eventsShow = [
 				'app.record.create.show',
 				'app.record.edit.show',
@@ -18,26 +27,25 @@
 
 	kintone.events.on(eventsShow, function (event) {
 		var record = event.record;
-
-		if (('app.record.create.show').indexOf(event.type) >= 0){
-			record['PurchaseNumber']['value'] = "";
-		}
-		record['PurchaseNumber']['disabled'] = true;
-
-		return event;
-	});
-
-	// レコード追加、編集画面の表示前処理
-	// 事業所のdisabled化
-	var eventsEdit = [
-				'app.record.edit.show',
-				'app.record.index.edit.show'
-				];
-
-	kintone.events.on(eventsEdit, function (event) {
-		var record = event.record;
-		record['Office']['disabled'] = true;
+		var commonService = new CommonService();
 		
+		// 共通
+		record['PurchaseNumber']['disabled'] = true;
+		
+		// アクション別
+		switch (true) {
+			case ('app.record.create.show').indexOf(event.type) >= 0:
+				record['PurchaseNumber']['value'] = "";
+				record['Office']['value'] = commonService.fncGetTantoOffice();
+				break;
+			case ('app.record.edit.show').indexOf(event.type) >= 0:
+			case ('app.record.index.edit.show').indexOf(event.type) >= 0:
+				record['Office']['disabled'] = true;
+				break;
+			default:
+				break;
+		}
+
 		return event;
 	});
 	
@@ -64,23 +72,11 @@
 			return event;
 		}
 		
-		// 移動履歴の登録
-		if (! purchaseService.postMovement(autoPurchaseNumber)){
+		// 関連情報登録（移動履歴、商品マスタ、在庫更新）
+		if (! purchaseService.setRelationInfo(autoPurchaseNumber)) {
 			event.error = purchaseService.getMessage();
 			return event;
-		};
-		
-		// 商品マスタの更新
-		if (! purchaseService.putItem()){
-			event.error = purchaseService.getMessage();
-			return event;
-		};
-		
-		// 在庫の登録・更新
-		if (! purchaseService.putZaiko()){
-			event.error = purchaseService.getMessage();
-			return event;
-		};
+		}
 		
 		return event;
 	});

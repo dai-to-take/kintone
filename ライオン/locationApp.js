@@ -45,11 +45,8 @@
         record['Address']['disabled'] = true;
         return event;
     }
-
-	
-	
+    
 	// レコード追加、編集画面の表示前処理
-	// 場所コードのdisabled化
 	var eventsShow = [
 				'app.record.create.show',
 				'app.record.edit.show',
@@ -58,26 +55,26 @@
 
 	kintone.events.on(eventsShow, function (event) {
 		var record = event.record;
-
-		if (('app.record.create.show').indexOf(event.type) >= 0){
-			record['LocationCd']['value'] = "";
-		}
-		record['LocationCd']['disabled'] = true;
-
-		return event;
-	});
-	
-	// レコード追加、編集画面の表示前処理
-	// ロケーション区分のdisabled化
-	var eventsEdit = [
-				'app.record.edit.show',
-				'app.record.index.edit.show'
-				];
-
-	kintone.events.on(eventsEdit, function (event) {
-		var record = event.record;
-		record['LocationKbn']['disabled'] = true;
+		var commonService = new CommonService();
 		
+		// 共通
+		record['LocationCd']['disabled'] = true;
+		
+		// アクション別
+		switch (true) {
+			case ('app.record.create.show').indexOf(event.type) >= 0:
+				record['LocationCd']['value'] = "";
+				record['Office']['value'] = commonService.fncGetTantoOffice();
+				break;
+			case ('app.record.edit.show').indexOf(event.type) >= 0:
+			case ('app.record.index.edit.show').indexOf(event.type) >= 0:
+				record['Office']['disabled'] = true;
+				record['LocationKbn']['disabled'] = true;
+				break;
+			default:
+				break;
+		}
+
 		return event;
 	});
 	
