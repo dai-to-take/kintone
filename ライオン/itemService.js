@@ -59,7 +59,15 @@ ItemService.prototype = {
 	
 		return this.commonService.fncGetOffice(this.strOffice) + 
 				('00000' + intRecNo).slice(-5);
-	}
+	},
+	/***************************************/
+	/* 商品名の取得            */
+	/***************************************/
+	getItemName: function() {
+		return this.commonService.fncGetLocalNm(this.record['Locality']['value']) + ' ' + 
+				this.record['SizeOut']['value'] + ' ' + 
+				this.record['Material']['value'];
 	
+	}
 }
 

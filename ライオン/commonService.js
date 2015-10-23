@@ -155,7 +155,7 @@ CommonService.prototype = {
 		// API実行
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
 			var jsonObj = this.getJsonObj();
-			// 新規DeliveryNumberを取得
+			// 新規SlipNumberを取得
 			if (this.fncGetMaxNumber(jsonObj , 'IdoNumber' , _DIGITS.IDONUM)){
 				this.message = '基準番号が取得できました';
 				return true;
@@ -467,10 +467,12 @@ CommonService.prototype = {
 	// ロケーション区分（名称⇒コード）変換関数
 	fncGetLocationCd: function(strLocationKbn) {
 		switch (strLocationKbn) {
-			case '納入先':
-				var strLocationCd = "D";break;
 			case '仕入先':
 				var strLocationCd = "P";break;
+			case '委託元':
+				var strLocationCd = "E";break;
+			case '出荷先':
+				var strLocationCd = "D";break;
 			case '購入先':
 				var strLocationCd = "C";break;
 			case '倉庫':

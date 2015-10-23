@@ -22,7 +22,7 @@ Object.freeze(_IDOKBN);
 
 var _IDORSN = {
   'PURCH': '仕入',
-  'DELV': '納入',
+  'SHIP': '出荷',
   'SELL': '売上',
   'RETURN': '返却',
   'CLEAN': 'クリーニング',
@@ -32,7 +32,7 @@ Object.freeze(_IDORSN);
 
 var _SILPNUM = {
   'PURCH': 'P',
-  'DELV': 'D',
+  'SHIP': 'D',
   'SELL': 'S',
   'RETURN': 'R',
   'NST': 'M'
@@ -41,7 +41,7 @@ Object.freeze(_SILPNUM);
 
 var _CONDKBN = {
   'WHA': '自社内',
-  'DELV': '納入先',
+  'SHIP': '出荷先',
   'SELL': '販売済',
   'FAUL': '不良'
 };

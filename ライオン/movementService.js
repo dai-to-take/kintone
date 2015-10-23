@@ -59,17 +59,17 @@ MovementService.prototype = {
 					var strSakiLocationCdLU = this.record['WarehouseCdLU']['value'];
 					var strPrice = this.tableRecords[i].value['ItemPrice'].value;
 					break;
-				case _SILPNUM.DELV:
+				case _SILPNUM.SHIP:
 					var strIdoKbn = _IDOKBN.SYUKO;
-					var strIdoReason = _IDORSN.DELV;
+					var strIdoReason = _IDORSN.SHIP;
 					var strMotoLocationCdLU = this.record['WarehouseCdLU']['value'];
-					var strSakiLocationCdLU = this.record['DeliveryCdLU']['value'];
+					var strSakiLocationCdLU = this.record['ShipmentCdLU']['value'];
 					var strPrice = this.tableRecords[i].value['ItemPrice'].value;
 					break;
 				case _SILPNUM.SELL:
 					var strIdoKbn = _IDOKBN.SELL;
 					var strIdoReason = _IDORSN.SELL;
-					var strMotoLocationCdLU = this.record['DeliveryCdLU']['value'];
+					var strMotoLocationCdLU = this.record['ShipmentCdLU']['value'];
 					var strSakiLocationCdLU = '';
 					var strPrice = this.tableRecords[i].value['ItemPrice'].value;
 					break;
@@ -163,11 +163,11 @@ MovementService.prototype = {
 					partObj["PurchasePrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
 					partObj["ConditionKbn"] = {value: _CONDKBN.WHA};	// 状態区分
 					break;
-				case _SILPNUM.DELV:
+				case _SILPNUM.SHIP:
 					partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
-					partObj["DeliveryCdLU"] = {value: this.record['DeliveryCdLU']['value']};	// 納入先コード
-					partObj["DeliveryPrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
-					partObj["ConditionKbn"] = {value: _CONDKBN.DELV};	// 状態区分
+					partObj["ShipmentCdLU"] = {value: this.record['ShipmentCdLU']['value']};	// 出荷先コード
+					partObj["ShipmentPrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
+					partObj["ConditionKbn"] = {value: _CONDKBN.SHIP};	// 状態区分
 					break;
 				case _SILPNUM.SELL:
 					// TODO 購入先の登録が後追い ⇒ 登録後の更新で上書きを想定
@@ -210,11 +210,11 @@ MovementService.prototype = {
 			switch (SlipKbn) {
 				case _SILPNUM.PURCH:
 					break;
-				case _SILPNUM.DELV:
+				case _SILPNUM.SHIP:
 					motoLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
 					break;
 				case _SILPNUM.SELL:
-					motoLocationCd  = this.record['DeliveryCdLU']['value']; // 販売元
+					motoLocationCd  = this.record['ShipmentCdLU']['value']; // 販売元
 					break;
 				case _SILPNUM.RETURN:
 					motoLocationCd  = this.record['CustomerCdLU']['value']; // 顧客
@@ -234,8 +234,8 @@ MovementService.prototype = {
 				case _SILPNUM.PURCH:
 					sakiLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
 					break;
-				case _SILPNUM.DELV:
-					sakiLocationCd  = this.record['DeliveryCdLU']['value']; // 納入先
+				case _SILPNUM.SHIP:
+					sakiLocationCd  = this.record['ShipmentCdLU']['value']; // 出荷先
 					break;
 				case _SILPNUM.SELL:
 					break;

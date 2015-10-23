@@ -15,11 +15,13 @@
 		
 		// 共通
 		record['ItemCd']['disabled'] = true;
+		record['ItemName']['disabled'] = true;
 		
 		// アクション別
 		switch (true) {
 			case ('app.record.create.show').indexOf(event.type) >= 0:
 				record['ItemCd']['value'] = "";
+				record['ItemName']['value'] = "";
 				record['Office']['value'] = commonService.fncGetTantoOffice();
 				break;
 			case ('app.record.edit.show').indexOf(event.type) >= 0:
@@ -51,6 +53,9 @@
 		}else {
 			event.error = itemService.getMessage();
 		}
+		
+		// 商品名を設定
+		record['ItemName']['value'] = itemService.getItemName();
 
 		return event;
 	});

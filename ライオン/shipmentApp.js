@@ -1,4 +1,4 @@
-/* deliveryApp.js */
+/* shipmentApp.js */
 (function() {
 	'use strict';
 
@@ -19,12 +19,12 @@
 		var commonService = new CommonService();
 		
 		// 共通
-		record['DeliveryNumber']['disabled'] = true;
+		record['ShipmentNumber']['disabled'] = true;
 		
 		// アクション別
 		switch (true) {
 			case ('app.record.create.show').indexOf(event.type) >= 0:
-				record['DeliveryNumber']['value'] = "";
+				record['ShipmentNumber']['value'] = "";
 				record['Office']['value'] = commonService.fncGetTantoOffice();
 				break;
 			case ('app.record.edit.show').indexOf(event.type) >= 0:
@@ -47,22 +47,22 @@
 
 	kintone.events.on(eventAdd, function(event) {
         var record = event.record;
-		var autoDeliveryNumber = ""
+		var autoShipmentNumber = ""
 
 		// サービス初期化
-		var deliveryService = new DeliveryService(record);
+		var shipmentService = new ShipmentService(record);
 		// 伝票番号の採番
-		if (deliveryService.getDeliveryNumber()){
+		if (shipmentService.getShipmentNumber()){
 			// 採番したSlipNumberを設定
-			autoDeliveryNumber  = deliveryService.getAutoDeliveryNumber();
-			record['DeliveryNumber']['value'] = autoDeliveryNumber;
+			autoShipmentNumber  = shipmentService.getAutoShipmentNumber();
+			record['ShipmentNumber']['value'] = autoShipmentNumber;
 		} else {
-			event.error = deliveryService.getMessage();
+			event.error = shipmentService.getMessage();
 			return event;
 		}
 		
 		// 関連情報登録（移動履歴、商品マスタ、在庫更新）
-		if (! deliveryService.setRelationInfo(autoDeliveryNumber)) {
+		if (! shipmentService.setRelationInfo(autoShipmentNumber)) {
 			event.error = purchaseService.getMessage();
 			return event;
 		}

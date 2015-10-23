@@ -1,10 +1,10 @@
-/* deliveryService.js */
+/* shipmentService.js */
 
-var DeliveryService = function(record) {
+var ShipmentService = function(record) {
 	this._init(record);
 };
 
-DeliveryService.prototype = {
+ShipmentService.prototype = {
 	_init: function(record) {
 		// 初期化
 		this.status = "";
@@ -18,7 +18,7 @@ DeliveryService.prototype = {
 		this.movementService = new MovementService(this.record);
 		
 		// 変数セット
-		this.strDeliveryDate = record['DeliveryDate']['value'];
+		this.strShipmentDate = record['ShipmentDate']['value'];
 		this.strOffice = record['Office']['value'];
 		
 	},
@@ -34,11 +34,11 @@ DeliveryService.prototype = {
 	},
 	
 	/***************************************/
-	/* 納入管理用の伝票番号採番            */
+	/* 出荷管理用の伝票番号採番            */
 	/***************************************/
-	getDeliveryNumber: function() {
+	getShipmentNumber: function() {
 		// API実行
-		if (this.commonService.fncMakeSlipNumber('DeliveryDate' , 'DeliveryNumber' , _SILPNUM.DELV , this.strDeliveryDate , this.strOffice )){
+		if (this.commonService.fncMakeSlipNumber('ShipmentDate' , 'ShipmentNumber' , _SILPNUM.SHIP, this.strShipmentDate , this.strOffice )){
 			this.message = '伝票番号が取得できました';
 			return true;
 		}else {
@@ -46,28 +46,28 @@ DeliveryService.prototype = {
 			return false;
 		}
 	},
-	getAutoDeliveryNumber: function() {
+	getAutoShipmentNumber: function() {
 		return this.commonService.getSlipNumber();
 	},
 
 	/***************************************/
 	/* 関連情報の更新                      */
 	/***************************************/
-	setRelationInfo: function(autoDeliveryNumber) {
+	setRelationInfo: function(autoShipmentNumber) {
 		// 移動履歴の登録
-		if (! this.movementService.fncPostMovement(_SILPNUM.DELV , this.strDeliveryDate , autoDeliveryNumber)) {
+		if (! this.movementService.fncPostMovement(_SILPNUM.SHIP , this.strShipmentDate , autoShipmentNumber)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
 		
 		// 在庫の更新
-		if (! this.movementService.fncPutZaiko(_SILPNUM.DELV , this.strDeliveryDate)) {
+		if (! this.movementService.fncPutZaiko(_SILPNUM.SHIP , this.strShipmentDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
 		
 		// 商品の更新
-		if (! this.movementService.fncPutItem(_SILPNUM.DELV , this.strDeliveryDate)) {
+		if (! this.movementService.fncPutItem(_SILPNUM.SHIP , this.strShipmentDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
