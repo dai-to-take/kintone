@@ -36,7 +36,7 @@ ItemService.prototype = {
 		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.commonService.getJsonObj();
 			// 新規ItemCdを取得
-			if (this.commonService.fncGetMaxNumber(jsonObj,'ItemCd',-5)){
+			if (this.commonService.fncGetMaxNumber(jsonObj , 'ItemCd' , _DIGITS.ITEMCD)){
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {

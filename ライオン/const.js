@@ -13,13 +13,6 @@ var _CHECK = {
 };
 Object.freeze(_CHECK);
 
-var _APPID = {
-  'IDO': 127,
-  'ITEM': 120,
-  'ZAIKO': 122
-};
-Object.freeze(_APPID);
-
 var _IDOKBN = {
   'NYUKO': '入庫',
   'SYUKO': '出庫',
@@ -78,13 +71,28 @@ var _OFFICENAME = {
 };
 Object.freeze(_OFFICENAME);
 
+var _DIGITS = {
+  'ITEMLENG': 7,
+  'SLIPNUM': -3,
+  'IDONUM': -5,
+  'ITEMCD': -5,
+  'LOCATIONCD': -3,
+};
+Object.freeze(_DIGITS);
+
+var _APPID = {
+  'IDO': 127,
+  'ITEM': 120,
+  'ZAIKO': 122
+};
+Object.freeze(_APPID);
+
 var _USEROFFICE = {
   'to-take': _OFFICENAME.SILK,
   '2sg-share': _OFFICENAME.LION,
   'lion': _OFFICENAME.LION
 };
 Object.freeze(_USEROFFICE);
-
 
 // ヌーリ工房（nuri）
 // ジェッディ工房（Jeddi）

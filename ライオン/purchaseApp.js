@@ -81,4 +81,35 @@
 		return event;
 	});
 	
+	// バーコード処理
+	var eventCreate = [
+			'app.record.create.show'
+			];
+    kintone.events.on(eventCreate , function (event) {
+		var commonService = new CommonService();
+
+		// スペースにテキストボックスを設置
+		kintone.app.record.getSpaceElement('BarcodeSpc').appendChild(commonService.fncGetBarcodeText());
+
+		return event;
+	});
+	
+	// バーコード処理(ルックアップ取得)
+	var eventCol = [
+				'app.record.create.change.ItemPrice'
+				];
+				
+    kintone.events.on(eventCol , function (event) {
+		var record = event.record;
+		
+		var tableRecords = record['ItemTable']['value'];
+		for (var i = 0; i < tableRecords.length; i++) {
+			if ((tableRecords[i].value['ItemPrice']['value'] == 0) &&
+				(tableRecords[i].value['ItemNameLU']['value']  == null)){
+				tableRecords[i].value['ItemCdLU']['lookup'] = true;
+			}
+		}
+		
+		return event;
+	});
 })();

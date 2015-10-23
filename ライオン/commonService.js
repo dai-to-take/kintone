@@ -133,7 +133,7 @@ CommonService.prototype = {
 			var jsonObj = this.getJsonObj();
 			var strNend = ('00' + this.funGetNendo(ReferenceDate , Office)).slice(-2);
 			// 新規SlipNumberを取得
-			if (this.fncGetMaxNumber(jsonObj,SlipNumName,-3)){
+			if (this.fncGetMaxNumber(jsonObj , SlipNumName , _DIGITS.SLIPNUM)){
 				this.slipNumber = SlipKbn + this.fncGetOffice(Office) + strNend + ('0000' + this.getRecNo()).slice(-4);
 				this.message = '伝票番号が取得できました';
 				return true;
@@ -156,7 +156,7 @@ CommonService.prototype = {
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
 			var jsonObj = this.getJsonObj();
 			// 新規DeliveryNumberを取得
-			if (this.fncGetMaxNumber(jsonObj,'IdoNumber' , -5)){
+			if (this.fncGetMaxNumber(jsonObj , 'IdoNumber' , _DIGITS.IDONUM)){
 				this.message = '基準番号が取得できました';
 				return true;
 			} else {
@@ -351,6 +351,66 @@ CommonService.prototype = {
 		} else {
 			return false;
 		}
+	},
+	/***************************************/
+	/* バーコード処理                              */
+	/***************************************/
+	fncGetBarcodeText: function() {
+		// バーコード入力用項目を設定
+		var myBarcodeText = document.createElement('input');
+		myBarcodeText.type = "text";
+		myBarcodeText.id = 'my_barcode_text';
+		myBarcodeText.name = 'my_barcode_text';
+		myBarcodeText.placeholder="バーコード専用"
+		myBarcodeText.value = '';
+		myBarcodeText.oninput = function() {
+			// 入力都度取得
+			var element = document.getElementById('my_barcode_text'); 
+//			console.log(element.value.length);
+			if (element.value.length == _DIGITS.ITEMLENG) {
+				// 商品コードと同じ桁数の場合のみテーブルに追加
+				var rec = kintone.app.record.get();
+				var record = rec.record;
+				var tableRecords = record.ItemTable.value;
+				
+				try{
+					// 現在最大明細行を取得
+					var maxRec = tableRecords.length;
+					
+					var maxObject = tableRecords[maxRec-1];
+
+					// 最大明細行の入力を値を取得
+					var maxValue = maxObject['value']['ItemCdLU'].value;
+					if (maxValue == null) {
+						// 最大明細行が空白の場合は、該当行の入力値をセット
+						maxObject['value']['ItemCdLU'].value = element.value;
+						maxObject['value']['ItemPrice'].value = 0;
+					} else {
+						// 最大明細行に入力がある場合は
+						// 最大明細行コピー元として１明細追加
+						var copyObject = $.extend(true, {}, tableRecords[maxRec-1]);
+						for ( var keyB in copyObject['value'] ) {
+							copyObject['value'][keyB].value = undefined;
+						}
+						copyObject['value']['ItemCdLU'].value = element.value;
+						copyObject['value']['ItemPrice'].value = 0;
+
+						// 最終行に追加
+						tableRecords.push(copyObject);
+					}
+				} catch(e){
+					return false;
+				}
+				
+				// バード領域を初期化
+				element.value = '';
+				
+				// 画面へ反映
+				kintone.app.record.set(rec);
+			}
+			element.focus();
+		};
+		return myBarcodeText;
 	},
 	/***************************************/
 	/* 事業所                              */
