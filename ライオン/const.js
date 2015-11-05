@@ -13,6 +13,12 @@ var _CHECK = {
 };
 Object.freeze(_CHECK);
 
+var _MODE = {
+  'S': 'Single',
+  'M': 'Multi'
+};
+Object.freeze(_MODE);
+
 var _IDOKBN = {
   'NYUKO': '入庫',
   'SYUKO': '出庫',

@@ -15,7 +15,7 @@ SellingService.prototype = {
 		
 		// サービス初期化
 		this.commonService = new CommonService();
-		this.movementService = new MovementService(this.record);
+		this.movementService = new MovementService(this.record, _MODE.M);
 		
 		// 変数セット
 		this.strSellingDate = record['SellingDate']['value'];

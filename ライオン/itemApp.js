@@ -56,8 +56,31 @@
 		
 		// 商品名を設定
 		record['ItemName']['value'] = itemService.getItemName();
+		
 
 		return event;
-	});
+	}),
 	
+	// メンテナンス用の機能
+    kintone.events.on('app.record.detail.show', function (event) {
+		// メニュ右側の空白部分にボタンを設置
+		var myIndexButton = document.createElement('button');
+		myIndexButton.id = 'my_index_button';
+		myIndexButton.innerHTML = '在庫展開';
+		myIndexButton.onclick = function () {
+			var rec = kintone.app.record.get();
+			var record = rec.record;
+			
+			var itemService = new ItemService(record);
+			
+			// 関連情報登録（移動履歴、在庫更新）
+			if (! itemService.setRelationInfo()) {
+				event.error = itemService.getMessage();
+				return event;
+			}
+
+			alert('在庫展開完了');
+		}
+		kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+	});
 })();	

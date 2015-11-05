@@ -1,14 +1,18 @@
 /* movementService.js */
 
-var MovementService = function(record) {
-	this._init(record);
+var MovementService = function(record, mode) {
+	this._init(record, mode);
 };
 
 MovementService.prototype = {
-	_init: function(record) {
+	_init: function(record, mode) {
 		// 初期化
 		this.record = record;
-		this.tableRecords = record['ItemTable']['value'];
+		
+		this.mode = mode;
+		if (this.mode == _MODE.M) {
+			this.tableRecords = record['ItemTable']['value'];
+		}
 		
 		// サービス初期化
 		this.commonService = new CommonService();
@@ -28,17 +32,34 @@ MovementService.prototype = {
 	/* 移動履歴登録                        */
 	/***************************************/
 	fncPostMovement: function(SlipKbn , ReferenceDate , SlipNumber) {
-		// 変数初期化
-		var cntNyusyutu = 0;
-		
 		// 移動履歴登録
 		// 基準番号を取得
-		if (this.commonService.fncMakeIdoNumber(ReferenceDate)) {
-			// 初期値を取得
-			cntNyusyutu  = this.commonService.getRecNo();
-		} else {
+		if (! this.commonService.fncMakeIdoNumber(ReferenceDate)) {
 			this.message = '伝票番号が取得できません。';
 			return false;
+		}
+		
+		// JSONパラメータ作成
+		var queryObj = new Object();
+		queryObj = this.fncMakeMovement(SlipKbn , ReferenceDate , SlipNumber);
+		
+		// 登録処理の実行
+		if (this.commonService.fncPostRecords(queryObj)){
+			this.message = '移動履歴が登録されました';
+			return true;
+		} else {
+			this.message = '移動履歴の登録が失敗しました';
+			return false;
+		}
+	},
+	
+	fncMakeMovement: function(SlipKbn , ReferenceDate , SlipNumber) {
+		// 変数初期化
+		var cntNyusyutu = this.commonService.getRecNo();
+		var cntLength = 1;
+		
+		if (this.mode == _MODE.M) {
+			cntLength = this.tableRecords.length;
 		}
 		
 		// JSONパラメータ作成
@@ -46,10 +67,10 @@ MovementService.prototype = {
 		queryObj["app"] = _APPID.IDO;
 		queryObj["records"] = new Array();
 
-		for (var i = 0; i < this.tableRecords.length; i++) {
+		for (var i = 0; i < cntLength; i++) {
 			var partObj = new Object();
-			queryObj["record"] = partObj;
 
+			var strItemCd = ( this.mode == _MODE.S ) ? this.record['ItemCd'].value : this.tableRecords[i].value['ItemCdLU'].value; 
 			// 伝票種別によって変更
 			switch (SlipKbn) {
 				case _SILPNUM.PURCH:
@@ -57,21 +78,21 @@ MovementService.prototype = {
 					var strIdoReason = _IDORSN.PURCH;
 					var strMotoLocationCdLU = this.record['PurchaseCdLU']['value'];
 					var strSakiLocationCdLU = this.record['WarehouseCdLU']['value'];
-					var strPrice = this.tableRecords[i].value['ItemPrice'].value;
+					var strPrice = ( this.mode == _MODE.S ) ? this.record['PurchasePrice'].value : this.tableRecords[i].value['ItemPrice'].value; 
 					break;
 				case _SILPNUM.SHIP:
 					var strIdoKbn = _IDOKBN.SYUKO;
 					var strIdoReason = _IDORSN.SHIP;
 					var strMotoLocationCdLU = this.record['WarehouseCdLU']['value'];
 					var strSakiLocationCdLU = this.record['ShipmentCdLU']['value'];
-					var strPrice = this.tableRecords[i].value['ItemPrice'].value;
+					var strPrice = ( this.mode == _MODE.S ) ? this.record['ShipmentPrice'].value : this.tableRecords[i].value['ItemPrice'].value; 
 					break;
 				case _SILPNUM.SELL:
 					var strIdoKbn = _IDOKBN.SELL;
 					var strIdoReason = _IDORSN.SELL;
 					var strMotoLocationCdLU = this.record['ShipmentCdLU']['value'];
 					var strSakiLocationCdLU = '';
-					var strPrice = this.tableRecords[i].value['ItemPrice'].value;
+					var strPrice = ( this.mode == _MODE.S ) ? this.record['SellingPrice'].value : this.tableRecords[i].value['ItemPrice'].value; 
 					break;
 				case _SILPNUM.RETURN:
 					var strIdoKbn = _IDOKBN.NYUKO;
@@ -97,7 +118,7 @@ MovementService.prototype = {
 			partObj["MotoLocationCdLU"] = {value: strMotoLocationCdLU};	// 移動元ロケーションコード
 			partObj["SakiLocationCdLU"] = {value: strSakiLocationCdLU};	// 移動先ロケーションコード
 			
-			partObj["ItemCdLU"] = {value: this.tableRecords[i].value['ItemCdLU'].value};	//商品コード
+			partObj["ItemCdLU"] = {value: strItemCd};	//商品コード
 			partObj["Price"] = {value: strPrice};	//価格
 			
 		
@@ -106,13 +127,7 @@ MovementService.prototype = {
 			cntNyusyutu++;
 		}
 		
-		if (this.commonService.fncPostRecords(queryObj)){
-			this.message = '移動履歴が登録されました';
-			return true;
-		} else {
-			this.message = '移動履歴の登録が失敗しました';
-			return false;
-		}
+		return queryObj;
 	},
 	
 	/***************************************/
@@ -152,7 +167,6 @@ MovementService.prototype = {
 			queryObj["id"] = itemCdId;
 			
 			var partObj = new Object();
-			queryObj["record"] = partObj;
 
 			
 			// 伝票種別によって変更
@@ -197,10 +211,17 @@ MovementService.prototype = {
 	/* 在庫の更新                          */
 	/***************************************/
 	fncPutZaiko: function(SlipKbn , ReferenceDate) {
-		for (var i = 0; i < this.tableRecords.length; i++) {
+		// 変数初期化
+		var cntLength = 1;
+		
+		if (this.mode == _MODE.M) {
+			cntLength = this.tableRecords.length;
+		}
+		
+		for (var i = 0; i < cntLength; i++) {
 			// 変数初期化
-			var updateItemCd = this.tableRecords[i].value['ItemCdLU'].value;  // 対象商品
-
+			var updateItemCd = ( this.mode == _MODE.S ) ? this.record['ItemCd'].value : this.tableRecords[i].value['ItemCdLU'].value; // 対象商品
+					
 			var motoLocationCd  = ''; // 移動元
 			var sakiLocationCd  = ''; // 移動先
 			
@@ -283,11 +304,11 @@ MovementService.prototype = {
 			this.message = '対象レコード取得エラー';
 			return false;
 		}
-		console.log('CalKbn=>' + CalKbn);
-		console.log('ItemCd=>' + ItemCd);
-		console.log('LocationCd=>' + LocationCd);
-		console.log('itemCdId=>' + itemCdId);
-		console.log('stockQuantity=>' + itemCdId);
+		//console.log('CalKbn=>' + CalKbn);
+		//console.log('ItemCd=>' + ItemCd);
+		//console.log('LocationCd=>' + LocationCd);
+		//console.log('itemCdId=>' + itemCdId);
+		//console.log('stockQuantity=>' + itemCdId);
 		if (itemCdId == '') {
 		// 存在しない場合
 			// 登録用パラメータを作成

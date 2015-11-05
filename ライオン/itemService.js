@@ -13,6 +13,7 @@ ItemService.prototype = {
 
 		// サービス初期化
 		this.commonService = new CommonService();
+		this.movementService = new MovementService(this.record, _MODE.S);
 		
 		// 変数セット
 		this.strOffice = this.record['Office']['value'];
@@ -68,6 +69,27 @@ ItemService.prototype = {
 				this.record['SizeOut']['value'] + ' ' + 
 				this.record['Material']['value'];
 	
+	},
+	
+	/***************************************/
+	/* 関連情報の更新                      */
+	/***************************************/
+	setRelationInfo: function() {
+		var strPurchaseDate = this.record['PurchaseDate']['value'];
+		
+		// 移動履歴の登録
+		if (! this.movementService.fncPostMovement(_SILPNUM.PURCH , strPurchaseDate , '')) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
+		// 在庫の更新
+		if (! this.movementService.fncPutZaiko(_SILPNUM.PURCH , strPurchaseDate)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
+		return true;
 	}
 }
 
