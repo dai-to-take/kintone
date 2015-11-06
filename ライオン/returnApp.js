@@ -26,6 +26,8 @@
 			case ('app.record.create.show').indexOf(event.type) >= 0:
 				record['ReturnNumber']['value'] = "";
 				record['Office']['value'] = commonService.fncGetTantoOffice();
+				record['WarehouseCdLU']['value'] = commonService.fncGetTantoSouko();
+				record['WarehouseCdLU']['lookup'] = true;
 				break;
 			case ('app.record.edit.show').indexOf(event.type) >= 0:
 			case ('app.record.index.edit.show').indexOf(event.type) >= 0:
@@ -77,7 +79,7 @@
 		
 		// 関連情報登録（移動履歴、商品マスタ、在庫更新）
 		if (! returnService.setRelationInfo(autoReturnNumber)) {
-			event.error = purchaseService.getMessage();
+			event.error = returnService.getMessage();
 			return event;
 		}
 

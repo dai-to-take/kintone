@@ -97,7 +97,7 @@ MovementService.prototype = {
 				case _SILPNUM.RETURN:
 					var strIdoKbn = _IDOKBN.NYUKO;
 					var strIdoReason = _IDORSN.RETURN;
-					var strMotoLocationCdLU = this.record['CustomerCdLU']['value'];
+					var strMotoLocationCdLU = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU']['value'] : this.tableRecords[i].value['ShipmentCdLU'].value; 
 					var strSakiLocationCdLU = this.record['WarehouseCdLU']['value'];
 					var strPrice = 0;
 					break;
@@ -134,12 +134,19 @@ MovementService.prototype = {
 	/* 商品の更新                          */
 	/***************************************/
 	fncPutItem: function(SlipKbn , ReferenceDate) {
-		for (var i = 0; i < this.tableRecords.length; i++) {
-			var updateItemCd = this.tableRecords[i].value['ItemCdLU'].value;
+		var cntLength = 1;
+		
+		if (this.mode == _MODE.M) {
+			cntLength = this.tableRecords.length;
+		}
+		
+		for (var i = 0; i < cntLength; i++) {
+			var updateItemCd = ( this.mode == _MODE.S ) ? this.record['ItemCd'].value : this.tableRecords[i].value['ItemCdLU'].value;
 			var itemCdId = null;
 			
 			// 商品チェック
 			var resVal = this.commonService.fncItemCheck(updateItemCd , ReferenceDate);
+console.log(resVal);
 			if (resVal == _CHECK.YES) {
 				// 未来の商品が存在した場合
 				continue;
@@ -147,6 +154,7 @@ MovementService.prototype = {
 				this.message = '商品チェックが失敗しました。';
 				return false;
 			}
+console.log('いまここ2 => ');
 
 			// 商品ID取得
 			if (this.commonService.fncGetRecordDataKey(_APPID.ITEM , 'ItemCd' , updateItemCd)) {
@@ -160,6 +168,7 @@ MovementService.prototype = {
 				this.message = '対象商品が取得できません。';
 				return false;
 			}
+console.log('いまここ3 => ');
 			
 			// 更新用パラメータを作成
 			var queryObj = new Object();
@@ -167,15 +176,16 @@ MovementService.prototype = {
 			queryObj["id"] = itemCdId;
 			
 			var partObj = new Object();
-
+			queryObj["record"] = partObj;
 			
 			// 伝票種別によって変更
 			switch (SlipKbn) {
 				case _SILPNUM.PURCH:
 					partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
 					partObj["PurchaseCdLU"] = {value: this.record['PurchaseCdLU']['value']};	// 仕入先コード
-					partObj["PurchasePrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
+					partObj["PurchasePrice"] = {value: this.record['PurchasePrice']['value']};	// 価格
 					partObj["ConditionKbn"] = {value: _CONDKBN.WHA};	// 状態区分
+					partObj["ZaikoTenkai"] = {value: '在庫展開済'};	// 在庫展開
 					break;
 				case _SILPNUM.SHIP:
 					partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
@@ -184,7 +194,6 @@ MovementService.prototype = {
 					partObj["ConditionKbn"] = {value: _CONDKBN.SHIP};	// 状態区分
 					break;
 				case _SILPNUM.SELL:
-					// TODO 購入先の登録が後追い ⇒ 登録後の更新で上書きを想定
 					partObj["SellingPrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
 					partObj["ConditionKbn"] = {value: _CONDKBN.SELL};	// 状態区分
 					break;
@@ -193,9 +202,11 @@ MovementService.prototype = {
 					partObj["ConditionKbn"] = {value: _CONDKBN.WHA};	// 状態区分
 					break;
 				default:
-					this.message = '移動履歴の登録が失敗しました';
+					this.message = '商品の更新が失敗しました';
 					return false;
 			};
+			console.log(_SILPNUM.PURCH);
+			console.log(partObj);
 			
 			// 更新実行
 			if (this.commonService.fntPutRecord(queryObj)){
@@ -238,7 +249,7 @@ MovementService.prototype = {
 					motoLocationCd  = this.record['ShipmentCdLU']['value']; // 販売元
 					break;
 				case _SILPNUM.RETURN:
-					motoLocationCd  = this.record['CustomerCdLU']['value']; // 顧客
+					motoLocationCd = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU'].value : this.tableRecords[i].value['ShipmentCdLU'].value;  // 顧客
 					break;
 				default:
 					motoLocationCd  = ''

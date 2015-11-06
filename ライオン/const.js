@@ -71,12 +71,6 @@ var _CALKBN = {
 };
 Object.freeze(_CALKBN);
 
-var _OFFICENAME = {
-  'LION': 'ライオンラグス',
-  'SILK': 'シルクラアジア'
-};
-Object.freeze(_OFFICENAME);
-
 var _DIGITS = {
   'ITEMLENG': 7,
   'SLIPNUM': -3,
@@ -93,12 +87,32 @@ var _APPID = {
 };
 Object.freeze(_APPID);
 
+
+var _OFFICENAME = {
+  'LION': 'ライオンラグス',
+  'SILK': 'シルクラアジア'
+};
+Object.freeze(_OFFICENAME);
+
 var _USEROFFICE = {
   'to-take': _OFFICENAME.SILK,
   '2sg-share': _OFFICENAME.LION,
   'lion': _OFFICENAME.LION
 };
 Object.freeze(_USEROFFICE);
+
+var _SOUKOCD = {
+  'LION': 'W00001',
+  'SILK': 'W00002'
+};
+Object.freeze(_SOUKOCD);
+
+var _USERSOUKO = {
+  'to-take': _SOUKOCD.SILK,
+  '2sg-share': _SOUKOCD.LION,
+  'lion': _SOUKOCD.LION
+};
+Object.freeze(_USERSOUKO);
 
 // ヌーリ工房（nuri）
 // ジェッディ工房（Jeddi）

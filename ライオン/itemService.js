@@ -76,7 +76,7 @@ ItemService.prototype = {
 	/***************************************/
 	setRelationInfo: function() {
 		var strPurchaseDate = this.record['PurchaseDate']['value'];
-		
+console.log(strPurchaseDate);
 		// 移動履歴の登録
 		if (! this.movementService.fncPostMovement(_SILPNUM.PURCH , strPurchaseDate , '')) {
 			this.message = this.movementService.getMessage();
@@ -85,6 +85,12 @@ ItemService.prototype = {
 		
 		// 在庫の更新
 		if (! this.movementService.fncPutZaiko(_SILPNUM.PURCH , strPurchaseDate)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
+		// 商品の更新
+		if (! this.movementService.fncPutItem(_SILPNUM.PURCH , strPurchaseDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}

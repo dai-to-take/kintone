@@ -37,6 +37,8 @@
 			case ('app.record.create.show').indexOf(event.type) >= 0:
 				record['PurchaseNumber']['value'] = "";
 				record['Office']['value'] = commonService.fncGetTantoOffice();
+				record['WarehouseCdLU']['value'] = commonService.fncGetTantoSouko();
+				record['WarehouseCdLU']['lookup'] = true;
 				break;
 			case ('app.record.edit.show').indexOf(event.type) >= 0:
 			case ('app.record.index.edit.show').indexOf(event.type) >= 0:

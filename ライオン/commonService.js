@@ -232,6 +232,7 @@ CommonService.prototype = {
 	fncItemCheck: function(ItemCd , ReferenceDate) {
 		// クエリー作成
 		var wQuery = 'ItemCdLU = "' + ItemCd + '" and IdoDate > "' + this.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
+console.log(wQuery);
 		// 今回の処理日より未来での変更があるか？
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
 			var jsonObj = this.getJsonObj();
@@ -346,6 +347,7 @@ CommonService.prototype = {
 	},
 	fncIsExistence: function(jsonObj) {
 		var obj = JSON.parse(jsonObj);
+console.log(obj);
 		if (obj.records[0] != null){
 			return true;
 		} else {
@@ -381,6 +383,7 @@ CommonService.prototype = {
 
 					// 最大明細行の入力を値を取得
 					var maxValue = maxObject['value']['ItemCdLU'].value;
+
 					if (maxValue == null) {
 						// 最大明細行が空白の場合は、該当行の入力値をセット
 						maxObject['value']['ItemCdLU'].value = element.value;
@@ -421,6 +424,16 @@ CommonService.prototype = {
 		var user = kintone.getLoginUser();
 		if (user.code in _USEROFFICE) {
 			return _USEROFFICE[user.code];
+		} else {
+			return '';
+		}
+	},
+	// 担当倉庫コードを取得
+	fncGetTantoSouko: function() {
+		// ログインユーザーを取得
+		var user = kintone.getLoginUser();
+		if (user.code in _USERSOUKO) {
+			return _USERSOUKO[user.code];
 		} else {
 			return '';
 		}
