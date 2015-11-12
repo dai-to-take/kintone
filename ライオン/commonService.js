@@ -325,7 +325,6 @@ CommonService.prototype = {
 		return true;
 	},
 	fncGetKeyVal: function(jsonObj , keyVal) {
-		console.log(jsonObj);
 		var obj = JSON.parse(jsonObj);
 		this.keyVal = '';
 		if (obj.records[0] != null){
@@ -369,7 +368,7 @@ CommonService.prototype = {
 		myBarcodeText.oninput = function() {
 			// 入力都度取得
 			var element = document.getElementById('my_barcode_text'); 
-			console.log(element.value.length);
+
 			if (_DIGITS.ITEMLENG1 <= element.value.length && element.value.length <= _DIGITS.ITEMLENG2 ) {
 				// 商品コードと同じ桁数の場合のみテーブルに追加
 				var rec = kintone.app.record.get();

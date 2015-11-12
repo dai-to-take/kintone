@@ -32,6 +32,7 @@ MovementService.prototype = {
 	/* 移動履歴登録                        */
 	/***************************************/
 	fncPostMovement: function(SlipKbn , ReferenceDate , SlipNumber) {
+		
 		// 移動履歴登録
 		// 基準番号を取得
 		if (! this.commonService.fncMakeIdoNumber(ReferenceDate)) {
@@ -39,24 +40,10 @@ MovementService.prototype = {
 			return false;
 		}
 		
-		// JSONパラメータ作成
-		var queryObj = new Object();
-		queryObj = this.fncMakeMovement(SlipKbn , ReferenceDate , SlipNumber);
-		
-		// 登録処理の実行
-		if (this.commonService.fncPostRecords(queryObj)){
-			this.message = '移動履歴が登録されました';
-			return true;
-		} else {
-			this.message = '移動履歴の登録が失敗しました';
-			return false;
-		}
-	},
-	
-	fncMakeMovement: function(SlipKbn , ReferenceDate , SlipNumber) {
 		// 変数初期化
 		var cntNyusyutu = this.commonService.getRecNo();
 		var cntLength = 1;
+		var cntLow = 1;
 		
 		if (this.mode == _MODE.M) {
 			cntLength = this.tableRecords.length;
@@ -66,7 +53,7 @@ MovementService.prototype = {
 		var queryObj = new Object();
 		queryObj["app"] = _APPID.IDO;
 		queryObj["records"] = new Array();
-
+		
 		for (var i = 0; i < cntLength; i++) {
 			var partObj = new Object();
 
@@ -124,13 +111,25 @@ MovementService.prototype = {
 			partObj["ItemCdLU"] = {value: strItemCd};	//商品コード
 			partObj["Price"] = {value: strPrice};	//価格
 			
-		
 			queryObj["records"].push(partObj);
 			
+			if(cntLength == cntLow || (i+1) % 100 == 0){
+				// 登録処理の実行
+				if (! this.commonService.fncPostRecords(queryObj)){
+					this.message = '移動履歴の登録が失敗しました';
+					return false;
+				}
+				
+				// リセット
+				queryObj["records"] = new Array();
+			}
+			
+			cntLow++;
 			cntNyusyutu++;
 		}
 		
-		return queryObj;
+		this.message = '移動履歴が登録されました';
+		return true;
 	},
 	
 	/***************************************/
