@@ -133,7 +133,7 @@ CommonService.prototype = {
 			var jsonObj = this.getJsonObj();
 			var strNend = ('00' + this.funGetNendo(ReferenceDate , Office)).slice(-2);
 			// 新規SlipNumberを取得
-			if (this.fncGetMaxNumber(jsonObj , SlipNumName , _DIGITS.SLIPNUM)){
+			if (this.fncGetMaxNumber(jsonObj , SlipNumName , _DIGITS.SLIPNUM_S , _DIGITS.SLIPNUM_E)){
 				this.slipNumber = SlipKbn + this.fncGetOffice(Office) + strNend + ('0000' + this.getRecNo()).slice(-4);
 				this.message = '伝票番号が取得できました';
 				return true;
@@ -156,7 +156,7 @@ CommonService.prototype = {
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
 			var jsonObj = this.getJsonObj();
 			// 新規SlipNumberを取得
-			if (this.fncGetMaxNumber(jsonObj , 'IdoNumber' , _DIGITS.IDONUM)){
+			if (this.fncGetMaxNumber(jsonObj , 'IdoNumber' , _DIGITS.IDONUM_S , _DIGITS.IDONUM_E)){
 				this.message = '基準番号が取得できました';
 				return true;
 			} else {
@@ -232,7 +232,7 @@ CommonService.prototype = {
 	fncItemCheck: function(ItemCd , ReferenceDate) {
 		// クエリー作成
 		var wQuery = 'ItemCdLU = "' + ItemCd + '" and IdoDate > "' + this.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD[T]HH:mm:ss[Z]")  + '"';
-console.log(wQuery);
+
 		// 今回の処理日より未来での変更があるか？
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
 			var jsonObj = this.getJsonObj();
@@ -301,7 +301,7 @@ console.log(wQuery);
 	/***************************************/
 	/* 共通系                              */
 	/***************************************/
-	fncGetMaxNumber: function(jsonObj , keyVal , cutNum) {
+	fncGetMaxNumber: function(jsonObj , keyVal , cutNumS , cutNumE) {
 		var obj = JSON.parse(jsonObj);
 		this.recNo = 1;
 		if (obj.records[0] != null){
@@ -315,7 +315,7 @@ console.log(wQuery);
 					}
 				}
 
-				this.recNo = parseInt(strGetVal.slice(cutNum),10) +1;
+				this.recNo = parseInt(strGetVal.slice(cutNumS ,cutNumE),10) +1;
 				
 			} catch(e){
 				this.message = '伝票番号が取得できません。';
@@ -325,6 +325,7 @@ console.log(wQuery);
 		return true;
 	},
 	fncGetKeyVal: function(jsonObj , keyVal) {
+		console.log(jsonObj);
 		var obj = JSON.parse(jsonObj);
 		this.keyVal = '';
 		if (obj.records[0] != null){
@@ -347,7 +348,7 @@ console.log(wQuery);
 	},
 	fncIsExistence: function(jsonObj) {
 		var obj = JSON.parse(jsonObj);
-console.log(obj);
+
 		if (obj.records[0] != null){
 			return true;
 		} else {
@@ -368,8 +369,8 @@ console.log(obj);
 		myBarcodeText.oninput = function() {
 			// 入力都度取得
 			var element = document.getElementById('my_barcode_text'); 
-//			console.log(element.value.length);
-			if (element.value.length == _DIGITS.ITEMLENG) {
+			console.log(element.value.length);
+			if (_DIGITS.ITEMLENG1 <= element.value.length && element.value.length <= _DIGITS.ITEMLENG2 ) {
 				// 商品コードと同じ桁数の場合のみテーブルに追加
 				var rec = kintone.app.record.get();
 				var record = rec.record;
@@ -443,7 +444,51 @@ console.log(obj);
 	/***************************************/
 	// 産地名称（略称）変換関数
 	fncGetLocalNm: function(strLocality) {
-		return strLocality.slice(strLocality.lastIndexOf("(") + 1 , strLocality.lastIndexOf("(") + 4);
+		//産地を英語表記にする
+		switch (strLocality) {
+			case 'クム':
+				var strLocality = "QUM";break;
+			case 'タブリーズ':
+				var strLocality = "TABRIZ";break;
+			case 'イスファハン':
+				var strLocality = "ESFAHAN";break;
+			case 'カシャーン':
+				var strLocality = "KASHAN";break;
+			case 'ナイン':
+				var strLocality = "NAIN";break;
+			case 'アルデビル':
+				var strLocality = "ARDABIL";break;
+			case 'アフシャル':
+				var strLocality = "AFSHAR";break;
+			case 'バクティアリ':
+				var strLocality = "BAKTIALI";break;
+			case 'カシュガイ':
+				var strLocality = "QASHQAI";break;
+			case 'ケルマン':
+				var strLocality = "KERMAN";break;
+			case 'サルーク':
+				var strLocality = "SAROUK";break;
+			case 'シラーズ':
+				var strLocality = "SHIRAZ";break;
+			case 'セネ':
+				var strLocality = "SENNAH";break;
+			case 'バルーチ':
+				var strLocality = "BALOUCH";break;
+			case 'ビジャール':
+				var strLocality = "BIDJAR";break;
+			case 'ビルジャンド':
+				var strLocality = "BIRJAND";break;
+			case 'ベラミン':
+				var strLocality = "VERAMIN";break;
+			case 'マシャッド':
+				var strLocality = "MASHHAD";break;
+			case 'ヤズド':
+				var strLocality = "YAZD";break;
+			case 'その他':
+				var strLocality = "OTH";break;
+		};
+		
+		return strLocality.slice(0 , 3);
 	},
 	// 事業所（名称⇒コード）変換関数
 	fncGetOffice: function(strOffice) {
@@ -504,6 +549,16 @@ console.log(obj);
 	fncGetYmd: function(strDate) {
 		var v1 = moment(new Date(strDate));
 		return v1.format("YYYYMM");
-	}
+	},
+	// 仕入先区分変換関数
+	fncGetPurchaseKbn: function(strPurchaseKbn) {
+		var strConsCd = '';
+
+		if (strPurchaseKbn == _LOCAKBN.CONS) {
+			strConsCd = 'E';
+		};
+		
+		return strConsCd;
+	}	
 
 }

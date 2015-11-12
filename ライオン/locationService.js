@@ -34,7 +34,7 @@ LocationService.prototype = {
 		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.commonService.getJsonObj();
 			// 新規LocationCdを取得
-			if (this.commonService.fncGetMaxNumber(jsonObj , 'LocationCd' , _DIGITS.LOCATIONCD)){
+			if (this.commonService.fncGetMaxNumber(jsonObj , 'LocationCd' , _DIGITS.LOCATIONCD_S , _DIGITS.LOCATIONCD_E)){
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {

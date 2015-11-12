@@ -132,6 +132,7 @@
     function setLocationIndex(event) {
  
         var lat = new Array(), lng = new Array(), recno = new Array();
+        var locacd = new Array(), locaname = new Array(), locakbn = new Array();
         var els, rec, i;
  
         // レコード情報を取得します
@@ -143,8 +144,10 @@
                 if (rec[i].lat.value.length > 0 && rec[i].lng.value.length > 0){
                     lat.push( parseFloat(rec[i].lat.value)); // 緯度
                     lng.push( parseFloat(rec[i].lng.value)); // 経度
-                    recno.push( rec[i].LocationName.value); // レコードID
-                    //recno.push( parseFloat(rec[i].record_no.value)); // レコードID
+                    recno.push( parseFloat(rec[i].record_no.value)); // レコードID
+                    locacd.push( rec[i].LocationCd.value); // ロケーションコード
+                    locaname.push( rec[i].LocationName.value); // ロケーション名
+                    locakbn.push( rec[i].LocationKbn.value); // ロケーション区分
                 }
             }
         }
@@ -193,18 +196,33 @@
  
         var marker = new Array();
         var m_latlng = new Array();
- 
+        var infowindow = new google.maps.InfoWindow();
+
         // 緯度・経度をもとに、地図にポインタを打ち込みます
         for (i=0; i < lat.length ; i+=1){
             if (isNaN(lat[i]) === false && isNaN(lng[i]) === false){
+                
                 m_latlng[i] = new google.maps.LatLng(lat[i],lng[i]);
                 marker[i] = new google.maps.Marker({
                     position: m_latlng[i],
                     map: map,
                     // ポインタのアイコンは Google Charts を使用します
-                    //icon: 'https://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=edge_bc|' + recno[i] + '|FF8060|000000'
-                    icon: 'https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=ski|bb|' + recno[i] + '|FFFFFF|000000'
-                });
+                    icon: 'https://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=edge_bc|' + locacd[i] + '|' + fncGetIconColor(locakbn[i]) + '|000000'
+               });
+                google.maps.event.addListener(marker[i], 'mouseover', (function(marker, i) {
+                    return function() {
+                     var url = location.protocol+'//'+location.hostname+'/k/'+kintone.app.getId()+'/show#record='+recno[i];
+                     var link = '<a href = "' + url + '">' + locaname[i] +'</a>'; 
+                     infowindow.setContent( '[' + locakbn[i] + ']<br><font size="3">　' + link + '</font></b>');
+                     infowindow.open(map, marker[i]);
+                    }
+                })(marker, i));
+                google.maps.event.addListener(marker[i], 'click', (function(marker, i) {
+                    return function() {
+                     infowindow.close();
+                    }
+                })(marker, i));
+                
             }
         }
     }
@@ -217,4 +235,24 @@
         script.src = src;
         head.appendChild(script);
     }
+    
+	// アイコンカラー変換関数
+	function fncGetIconColor(strLocationKbn) {
+		switch (strLocationKbn) {
+			case '仕入先':
+				var strIconColor = "FF8060";break;
+			case '委託元':
+				var strIconColor = "6196FF";break;
+			case '出荷先':
+				var strIconColor = "61FF7B";break;
+			case '購入先':
+				var strIconColor = "FFB061";break;
+			case '倉庫':
+				var strIconColor = "FF61CA";break;
+			default:
+				var strIconColor = "61FFE5";break;
+		};
+		
+		return strIconColor;
+	}
  

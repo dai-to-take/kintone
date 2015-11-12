@@ -26,6 +26,7 @@
 				record['Office']['value'] = commonService.fncGetTantoOffice();
 				record['WarehouseCdLU']['value'] = commonService.fncGetTantoSouko();
 				record['WarehouseCdLU']['lookup'] = true;
+				record['ZaikoTenkai']['value'] = [];
 				break;
 			case ('app.record.edit.show').indexOf(event.type) >= 0:
 			case ('app.record.index.edit.show').indexOf(event.type) >= 0:
@@ -71,8 +72,6 @@
 		var record = event.record;
         
 		if (record['ZaikoTenkai']['value'] == ''){
-			console.log('この時に処理する');
-			
 			var itemService = new ItemService(record);
 			
 			// 関連情報登録（移動履歴、商品マスタ、在庫更新）
@@ -80,33 +79,31 @@
 				event.error = itemService.getMessage();
 				return event;
 			}
-			console.log('処理した');
 			
 			location.reload(true);
 		}
-		console.log(record['ZaikoTenkai']['value']);
     };
     
 	// メンテナンス用の機能
-    kintone.events.on('app.record.detail.show', function (event) {
-		// メニュ右側の空白部分にボタンを設置
-		var myIndexButton = document.createElement('button');
-		myIndexButton.id = 'my_index_button';
-		myIndexButton.innerHTML = '在庫展開';
-		myIndexButton.onclick = function () {
-			var rec = kintone.app.record.get();
-			var record = rec.record;
-			
-			var itemService = new ItemService(record);
-			
-			// 関連情報登録（移動履歴、商品マスタ、在庫更新）
-			if (! itemService.setRelationInfo()) {
-				event.error = itemService.getMessage();
-				return event;
-			}
-
-			alert('在庫展開完了');
-		}
-		kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
-	});
+//    kintone.events.on('app.record.detail.show', function (event) {
+//		// メニュ右側の空白部分にボタンを設置
+//		var myIndexButton = document.createElement('button');
+//		myIndexButton.id = 'my_index_button';
+//		myIndexButton.innerHTML = '在庫展開';
+//		myIndexButton.onclick = function () {
+//			var rec = kintone.app.record.get();
+//			var record = rec.record;
+//			
+//			var itemService = new ItemService(record);
+//			
+//			// 関連情報登録（移動履歴、商品マスタ、在庫更新）
+//			if (! itemService.setRelationInfo()) {
+//				event.error = itemService.getMessage();
+//				return event;
+//			}
+//
+//			alert('在庫展開完了');
+//		}
+//		kintone.app.record.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+//	});
 })();	

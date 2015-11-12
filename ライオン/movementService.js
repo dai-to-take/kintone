@@ -71,6 +71,7 @@ MovementService.prototype = {
 			var partObj = new Object();
 
 			var strItemCd = ( this.mode == _MODE.S ) ? this.record['ItemCd'].value : this.tableRecords[i].value['ItemCdLU'].value; 
+			var strOffice = this.record['Office'].value;
 			// 伝票種別によって変更
 			switch (SlipKbn) {
 				case _SILPNUM.PURCH:
@@ -115,6 +116,8 @@ MovementService.prototype = {
 			
 			partObj["SlipNumber"] = {value: SlipNumber};	// 伝票番号
 			
+			partObj["Office"] = {value: strOffice};	// 事業所
+			
 			partObj["MotoLocationCdLU"] = {value: strMotoLocationCdLU};	// 移動元ロケーションコード
 			partObj["SakiLocationCdLU"] = {value: strSakiLocationCdLU};	// 移動先ロケーションコード
 			
@@ -146,7 +149,7 @@ MovementService.prototype = {
 			
 			// 商品チェック
 			var resVal = this.commonService.fncItemCheck(updateItemCd , ReferenceDate);
-console.log(resVal);
+
 			if (resVal == _CHECK.YES) {
 				// 未来の商品が存在した場合
 				continue;
@@ -154,7 +157,6 @@ console.log(resVal);
 				this.message = '商品チェックが失敗しました。';
 				return false;
 			}
-console.log('いまここ2 => ');
 
 			// 商品ID取得
 			if (this.commonService.fncGetRecordDataKey(_APPID.ITEM , 'ItemCd' , updateItemCd)) {
@@ -168,7 +170,6 @@ console.log('いまここ2 => ');
 				this.message = '対象商品が取得できません。';
 				return false;
 			}
-console.log('いまここ3 => ');
 			
 			// 更新用パラメータを作成
 			var queryObj = new Object();
@@ -205,8 +206,6 @@ console.log('いまここ3 => ');
 					this.message = '商品の更新が失敗しました';
 					return false;
 			};
-			console.log(_SILPNUM.PURCH);
-			console.log(partObj);
 			
 			// 更新実行
 			if (this.commonService.fntPutRecord(queryObj)){

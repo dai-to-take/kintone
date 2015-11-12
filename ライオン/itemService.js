@@ -19,6 +19,8 @@ ItemService.prototype = {
 		this.strOffice = this.record['Office']['value'];
 		
 		this.strItemCd =  this.record['ItemCd']['value'];
+		
+		this.strPurchaseKbn =  this.record['PurchaseKbnLU']['value'];
 	},
 	
 	/***************************************/
@@ -37,7 +39,7 @@ ItemService.prototype = {
 		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.commonService.getJsonObj();
 			// 新規ItemCdを取得
-			if (this.commonService.fncGetMaxNumber(jsonObj , 'ItemCd' , _DIGITS.ITEMCD)){
+			if (this.commonService.fncGetMaxNumber(jsonObj , 'ItemCd' , _DIGITS.ITEMCD_S , _DIGITS.ITEMCD_E)){
 				this.message = '伝票番号が取得できました';
 				return true;
 			} else {
@@ -59,7 +61,8 @@ ItemService.prototype = {
 		}
 	
 		return this.commonService.fncGetOffice(this.strOffice) + 
-				('00000' + intRecNo).slice(-5);
+				('00000' + intRecNo).slice(-5) +
+				this.commonService.fncGetPurchaseKbn(this.strPurchaseKbn);
 	},
 	/***************************************/
 	/* 商品名の取得            */
@@ -76,7 +79,7 @@ ItemService.prototype = {
 	/***************************************/
 	setRelationInfo: function() {
 		var strPurchaseDate = this.record['PurchaseDate']['value'];
-console.log(strPurchaseDate);
+
 		// 移動履歴の登録
 		if (! this.movementService.fncPostMovement(_SILPNUM.PURCH , strPurchaseDate , '')) {
 			this.message = this.movementService.getMessage();
