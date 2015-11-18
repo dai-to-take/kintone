@@ -124,10 +124,9 @@ CommonService.prototype = {
 	/***************************************/
 	fncMakeSlipNumber: function(DateName , SlipNumName , SlipKbn ,  ReferenceDate , Office ) {
 		// クエリー作成
-		var wQuery = DateName + ' >= "' + this.fncGetStartNen(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
-				'" and ' + DateName + ' <"' + this.fncGetEndNen(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
+		var wQuery = DateName + ' >= "' + this.fncGetStartNen(ReferenceDate , Office ).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
+				'" and ' + DateName + ' <"' + this.fncGetEndNen(ReferenceDate , Office ).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
 				'" and Office in ("' + Office + '") order by ' + SlipNumName + ' desc limit 1';
-		
 		// API実行
 		if (this.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.getJsonObj();
@@ -214,9 +213,9 @@ CommonService.prototype = {
 		m = parseInt(referenceDate.month());
 		
 		if (this.fncGetOffice(strOffice) == _OFFICE.LION){
-			if ((m >= _OFFICEYEAR.LION ) && ( m <= 12)) return y; else return y-1;
+			if ((m >= _OFFICEYEAR.LION ) && ( m <= 11)) return y; else return y-1;
 		} else {
-			if ((m >= _OFFICEYEAR.SILK ) && ( m <= 12)) return y; else return y-1;
+			if ((m >= _OFFICEYEAR.SILK ) && ( m <= 11)) return y; else return y-1;
 		}
 	},
 	

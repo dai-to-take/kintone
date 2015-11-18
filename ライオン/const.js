@@ -68,9 +68,10 @@ var _OFFICE = {
 };
 Object.freeze(_OFFICE);
 
+// シルクラ４月 ライオン５月（moment利用の為-1した月を基準）
 var _OFFICEYEAR = {
-  'SILK': 4,
-  'LION': 5
+  'SILK': 3,
+  'LION': 4
 };
 Object.freeze(_OFFICEYEAR);
 
