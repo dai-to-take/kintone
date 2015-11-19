@@ -77,9 +77,10 @@ ItemService.prototype = {
 	/* 商品名の取得            */
 	/***************************************/
 	getItemName: function() {
-		return this.commonService.fncGetLocalNm(this.record['Locality']['value']) + ' ' + 
-				this.record['SizeOut']['value'] + ' ' + 
-				this.record['Material']['value'];
+//		return this.commonService.fncGetLocalNm(this.record['Locality']['value']) + ' ' + 
+		return this.record['Locality']['value'] + ' ' + 
+				this.record['Shape']['value'] + ' ' + 
+				this.record['Size']['value'];
 	
 	},
 	
