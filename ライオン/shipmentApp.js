@@ -36,7 +36,7 @@
 			default:
 				break;
 		}
-
+		
 		return event;
 	});
 	

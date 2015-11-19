@@ -364,11 +364,19 @@ CommonService.prototype = {
 		myBarcodeText.name = 'my_barcode_text';
 		myBarcodeText.placeholder="バーコード専用"
 		myBarcodeText.value = '';
-		myBarcodeText.oninput = function() {
+		myBarcodeText.onfocus = function() {
+			var element = document.getElementById('my_barcode_text'); 
+			element.style.backgroundColor = "#F4A460";
+		};
+		myBarcodeText.onblur = function() {
+			var element = document.getElementById('my_barcode_text'); 
+			element.style.backgroundColor = "#FFFFFF";
+		};
+//		myBarcodeText.oninput = function() {
+		myBarcodeText.onkeydown = function() {
 			// 入力都度取得
 			var element = document.getElementById('my_barcode_text'); 
-
-			if (_DIGITS.ITEMLENG1 <= element.value.length && element.value.length <= _DIGITS.ITEMLENG2 ) {
+			if (event.keyCode == 13 && _DIGITS.ITEMLENG1 <= element.value.length && element.value.length <= _DIGITS.ITEMLENG2 ) {
 				// 商品コードと同じ桁数の場合のみテーブルに追加
 				var rec = kintone.app.record.get();
 				var record = rec.record;
@@ -383,7 +391,9 @@ CommonService.prototype = {
 					// 最大明細行の入力を値を取得
 					var maxValue = maxObject['value']['ItemCdLU'].value;
 
-					if (maxValue == null) {
+					if (maxValue == element.value) {
+						// 何もしない
+					} else if (maxValue == null) {
 						// 最大明細行が空白の場合は、該当行の入力値をセット
 						maxObject['value']['ItemCdLU'].value = element.value;
 						maxObject['value']['ItemPrice'].value = 0;

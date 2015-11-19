@@ -64,6 +64,15 @@ ItemService.prototype = {
 				('00000' + intRecNo).slice(-5) +
 				this.commonService.fncGetPurchaseKbn(this.strPurchaseKbn);
 	},
+	getAutoItemCdOut: function() {
+		var intRecNo = this.commonService.getRecNo();
+		if (this.commonService.fncGetOffice(this.strOffice) == _OFFICE.LION){
+			if(intRecNo == 1){
+				intRecNo = intRecNo + 50000;
+			}
+		}
+		return intRecNo + this.commonService.fncGetPurchaseKbn(this.strPurchaseKbn);
+	},
 	/***************************************/
 	/* 商品名の取得            */
 	/***************************************/

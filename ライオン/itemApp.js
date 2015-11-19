@@ -15,13 +15,15 @@
 		
 		// 共通
 		record['ItemCd']['disabled'] = true;
+		record['ItemCdOut']['disabled'] = true;
 		record['ItemName']['disabled'] = true;
-		//record['ZaikoTenkai']['disabled'] = true;
+		record['ZaikoTenkai']['disabled'] = true;
 		
 		// アクション別
 		switch (true) {
 			case ('app.record.create.show').indexOf(event.type) >= 0:
 				record['ItemCd']['value'] = "";
+				record['ItemCdOut']['value'] = "";
 				record['ItemName']['value'] = "";
 				record['Office']['value'] = commonService.fncGetTantoOffice();
 				record['WarehouseCdLU']['value'] = commonService.fncGetTantoSouko();
@@ -54,6 +56,7 @@
 		if (itemService.getItemCd()){
 			// 採番したItemCdを設定
 			record['ItemCd']['value'] = itemService.getAutoItemCd();
+			record['ItemCdOut']['value'] = itemService.getAutoItemCdOut();
 		}else {
 			event.error = itemService.getMessage();
 		}

@@ -46,6 +46,7 @@ var _SILPNUM = {
 Object.freeze(_SILPNUM);
 
 var _CONDKBN = {
+  'PURCH': '仕入先',
   'WHA': '自社内',
   'SHIP': '出荷先',
   'SELL': '販売済',
@@ -128,6 +129,11 @@ var _SOUKOCD = {
   'SILK': 'W00002'
 };
 Object.freeze(_SOUKOCD);
+
+var _CUSTOMERCD = {
+  'CONS': 'C00001'
+};
+Object.freeze(_CUSTOMERCD);
 
 var _USERSOUKO = {
   'to-take': _SOUKOCD.SILK,

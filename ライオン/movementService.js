@@ -79,13 +79,19 @@ MovementService.prototype = {
 					var strIdoKbn = _IDOKBN.SELL;
 					var strIdoReason = _IDORSN.SELL;
 					var strMotoLocationCdLU = this.record['ShipmentCdLU']['value'];
-					var strSakiLocationCdLU = '';
+					var strSakiLocationCdLU = _CUSTOMERCD.CONS;
 					var strPrice = ( this.mode == _MODE.S ) ? this.record['SellingPrice'].value : this.tableRecords[i].value['ItemPrice'].value; 
 					break;
 				case _SILPNUM.RETURN:
+					var strConditionKbn = ( this.mode == _MODE.S ) ? this.record['ConditionKbn']['value'] : this.tableRecords[i].value['ConditionKbn'].value; 
+					
 					var strIdoKbn = _IDOKBN.NYUKO;
 					var strIdoReason = _IDORSN.RETURN;
-					var strMotoLocationCdLU = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU']['value'] : this.tableRecords[i].value['ShipmentCdLU'].value; 
+					if (strConditionKbn == _CONDKBN.SELL){
+						var strMotoLocationCdLU = _CUSTOMERCD.CONS;
+					} else {
+						var strMotoLocationCdLU = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU']['value'] : this.tableRecords[i].value['ShipmentCdLU'].value; 
+					}
 					var strSakiLocationCdLU = this.record['WarehouseCdLU']['value'];
 					var strPrice = 0;
 					break;
@@ -186,20 +192,36 @@ MovementService.prototype = {
 					partObj["PurchasePrice"] = {value: this.record['PurchasePrice']['value']};	// 価格
 					partObj["ConditionKbn"] = {value: _CONDKBN.WHA};	// 状態区分
 					partObj["ZaikoTenkai"] = {value: '在庫展開済'};	// 在庫展開
+					
+					partObj["CurrentCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//所在コード
+					partObj["CurrentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日時
 					break;
 				case _SILPNUM.SHIP:
 					partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
 					partObj["ShipmentCdLU"] = {value: this.record['ShipmentCdLU']['value']};	// 出荷先コード
 					partObj["ShipmentPrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
+					partObj["ShipmentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 出荷日時
 					partObj["ConditionKbn"] = {value: _CONDKBN.SHIP};	// 状態区分
+					
+					partObj["CurrentCdLU"] = {value: this.record['ShipmentCdLU']['value']};	//所在コード
+					partObj["CurrentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日時
 					break;
 				case _SILPNUM.SELL:
-					partObj["SellingPrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 価格
+					partObj["CustomerCdLU"] = {value: _CUSTOMERCD.CONS};	// 購入先コード
+					partObj["SellingCdLU"] = {value: this.record['ShipmentCdLU']['value']};	// 売上先コード
+					partObj["SellingPrice"] = {value: this.tableRecords[i].value['ItemPrice'].value};	// 売上価格
+					partObj["SellingDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 売上日時
 					partObj["ConditionKbn"] = {value: _CONDKBN.SELL};	// 状態区分
+					
+					partObj["CurrentCdLU"] = {value: _CUSTOMERCD.CONS};	//所在コード
+					partObj["CurrentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日時
 					break;
 				case _SILPNUM.RETURN:
 					partObj["WarehouseCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//倉庫コード
 					partObj["ConditionKbn"] = {value: _CONDKBN.WHA};	// 状態区分
+					
+					partObj["CurrentCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//所在コード
+					partObj["CurrentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日時
 					break;
 				default:
 					this.message = '商品の更新が失敗しました';
@@ -236,7 +258,7 @@ MovementService.prototype = {
 			
 			var office = this.record['Office']['value'];
 			
-			// 出庫（減算減算処理）
+			// 出庫（在庫減算処理）
 			switch (SlipKbn) {
 				case _SILPNUM.PURCH:
 					break;
@@ -247,7 +269,12 @@ MovementService.prototype = {
 					motoLocationCd  = this.record['ShipmentCdLU']['value']; // 販売元
 					break;
 				case _SILPNUM.RETURN:
-					motoLocationCd = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU'].value : this.tableRecords[i].value['ShipmentCdLU'].value;  // 顧客
+					var strConditionKbn = ( this.mode == _MODE.S ) ? this.record['ConditionKbn']['value'] : this.tableRecords[i].value['ConditionKbn'].value; 
+					if (strConditionKbn == _CONDKBN.SELL){
+						motoLocationCd = _CUSTOMERCD.CONS;
+					} else {
+						motoLocationCd = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU'].value : this.tableRecords[i].value['ShipmentCdLU'].value;  // 出荷先
+					}
 					break;
 				default:
 					motoLocationCd  = ''
@@ -268,6 +295,7 @@ MovementService.prototype = {
 					sakiLocationCd  = this.record['ShipmentCdLU']['value']; // 出荷先
 					break;
 				case _SILPNUM.SELL:
+					sakiLocationCd  = _CUSTOMERCD.CONS; // 購入者
 					break;
 				case _SILPNUM.RETURN:
 					sakiLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
