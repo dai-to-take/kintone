@@ -42,15 +42,18 @@ var _SILPNUM = {
   'SELL': 'S',
   'RETURN': 'R',
   'NST': 'M'
+  'CHANGE': 'C'
 };
 Object.freeze(_SILPNUM);
 
 var _CONDKBN = {
   'PURCH': '仕入先',
-  'WHA': '自社内',
+  'WHA': '社内',
   'SHIP': '出荷先',
-  'SELL': '販売済',
-  'FAUL': '不良'
+  'SELL': '売上',
+  'FAUL': '不良',
+  'DEL': '消去',
+  'RETG': '返品'
 };
 Object.freeze(_CONDKBN);
 
