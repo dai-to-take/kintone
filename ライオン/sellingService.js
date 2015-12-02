@@ -54,6 +54,12 @@ SellingService.prototype = {
 	/* 関連情報の更新                      */
 	/***************************************/
 	setRelationInfo: function(autoSellingNumber) {
+		//エラーチェック
+		if (! this.movementService.fncInputMovement(_SILPNUM.SELL)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
 		// 移動履歴の登録
 		if (! this.movementService.fncPostMovement(_SILPNUM.SELL , this.strSellingDate , autoSellingNumber)) {
 			this.message = this.movementService.getMessage();

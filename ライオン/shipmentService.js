@@ -54,6 +54,12 @@ ShipmentService.prototype = {
 	/* 関連情報の更新                      */
 	/***************************************/
 	setRelationInfo: function(autoShipmentNumber) {
+		//エラーチェック
+		if (! this.movementService.fncInputMovement(_SILPNUM.SHIP)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
 		// 移動履歴の登録
 		if (! this.movementService.fncPostMovement(_SILPNUM.SHIP , this.strShipmentDate , autoShipmentNumber)) {
 			this.message = this.movementService.getMessage();

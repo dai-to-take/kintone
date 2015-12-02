@@ -32,7 +32,10 @@ var _IDORSN = {
   'SELL': '売上',
   'RETURN': '返却',
   'CLEAN': 'クリーニング',
-  'REPAIR': '修理'
+  'REPAIR': '修理',
+  'FAILURE': '不良',
+  'DELETE': '消去',
+  'RETURNEDGOODS': '返品'
 };
 Object.freeze(_IDORSN);
 
@@ -41,7 +44,7 @@ var _SILPNUM = {
   'SHIP': 'D',
   'SELL': 'S',
   'RETURN': 'R',
-  'NST': 'M'
+  'NST': 'M',
   'CHANGE': 'C'
 };
 Object.freeze(_SILPNUM);
@@ -140,7 +143,7 @@ Object.freeze(_CUSTOMERCD);
 
 var _USERSOUKO = {
   'to-take': _SOUKOCD.SILK,
-  '2sg-share': _SOUKOCD.LION,
+  'lion-rugs': _SOUKOCD.LION,
   'lion': _SOUKOCD.LION
 };
 Object.freeze(_USERSOUKO);

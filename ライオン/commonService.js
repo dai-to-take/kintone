@@ -101,7 +101,6 @@ CommonService.prototype = {
 			xmlHttp.send(null);
 		}
 		
-
 		if (xmlHttp.status == 200){
 		    if(window.JSON){
 		        this.status = _STATUS.OK;

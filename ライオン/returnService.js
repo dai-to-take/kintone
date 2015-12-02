@@ -53,6 +53,12 @@ ReturnService.prototype = {
 	/* 関連情報の更新                      */
 	/***************************************/
 	setRelationInfo: function(autoReturnNumber) {
+		//エラーチェック
+		if (! this.movementService.fncInputMovement(_SILPNUM.RETURN)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
 		// 移動履歴の登録
 		if (! this.movementService.fncPostMovement(_SILPNUM.RETURN , this.strReturnDate , autoReturnNumber)) {
 			this.message = this.movementService.getMessage();

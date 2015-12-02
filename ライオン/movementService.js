@@ -29,6 +29,54 @@ MovementService.prototype = {
 	},
 	
 	/***************************************/
+	/* エラーチェック                       */
+	/***************************************/
+	fncInputMovement: function(SlipKbn) {
+		var cntLength = 1;
+		
+		if (this.mode == _MODE.M) {
+			cntLength = this.tableRecords.length;
+		}
+		
+		for (var i = 0; i < cntLength; i++) {
+			if(SlipKbn == _SILPNUM.SHIP) {
+				if(this.tableRecords[i].value['ConditionKbn'].value != '社内') {
+					this.message = '状態区分が社内の商品コードを選択してください';
+					return false;
+				}
+			}else if(SlipKbn == _SILPNUM.SELL) {
+				if(this.tableRecords[i].value['ConditionKbn'].value == '社内') {
+					continue;
+				}else if(this.tableRecords[i].value['ConditionKbn'].value == '出荷先') {
+					continue;
+				}else {
+					this.message = '状態区分が社内または出荷先の商品コードを選択してください';
+					return false;
+				}
+			}else if(SlipKbn == _SILPNUM.RETURN) {
+				if(this.tableRecords[i].value['ConditionKbn'].value == '売上') {
+					continue;
+				}else if(this.tableRecords[i].value['ConditionKbn'].value == '出荷先') {
+					continue;
+				}else {
+					this.message = '状態区分が売上または出荷先の商品コードを選択してください';
+					return false;
+				}
+			}else if(SlipKbn == _SILPNUM.CHANGE) {
+				if(this.tableRecords[i].value['ConditionKbn'].value == '社内') {
+					continue;
+				}else if(this.tableRecords[i].value['ConditionKbn'].value == '出荷先') {
+					continue;
+				}else {
+					this.message = '状態区分が社内または出荷先の商品コードを選択してください';
+					return false;
+				}
+			}
+		}
+		return true;
+	},
+	
+	/***************************************/
 	/* 移動履歴登録                        */
 	/***************************************/
 	fncPostMovement: function(SlipKbn , ReferenceDate , SlipNumber) {
@@ -53,7 +101,6 @@ MovementService.prototype = {
 		var queryObj = new Object();
 		queryObj["app"] = _APPID.IDO;
 		queryObj["records"] = new Array();
-		
 		for (var i = 0; i < cntLength; i++) {
 			var partObj = new Object();
 
@@ -94,6 +141,20 @@ MovementService.prototype = {
 					}
 					var strSakiLocationCdLU = this.record['WarehouseCdLU']['value'];
 					var strPrice = 0;
+					break;
+				case _SILPNUM.CHANGE:
+					var strConditionKbn = this.record['ChangeConditionKbn']['value']; 
+					var strIdoKbn = _IDOKBN.SYUKO;
+					if (strConditionKbn == _CONDKBN.FAUL){
+						var strIdoReason = _IDORSN.FAILURE;
+					} else if (strConditionKbn == _CONDKBN.DEL){
+						var strIdoReason = _IDORSN.DELETE;
+					} else if (strConditionKbn == _CONDKBN.RETG){
+						var strIdoReason = _IDORSN.RETURNEDGOODS;
+					}
+					var strMotoLocationCdLU = ( this.mode == _MODE.S ) ? this.record['CurrentCdLU']['value'] : this.tableRecords[i].value['CurrentCdLU'].value;
+					var strSakiLocationCdLU = '';
+					var strPrice = 0; 
 					break;
 				default:
 					this.message = '移動履歴の登録が失敗しました';
@@ -223,6 +284,10 @@ MovementService.prototype = {
 					partObj["CurrentCdLU"] = {value: this.record['WarehouseCdLU']['value']};	//所在コード
 					partObj["CurrentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日時
 					break;
+				case _SILPNUM.CHANGE:
+					partObj["ConditionKbn"] = {value: this.record['ChangeConditionKbn']['value']};	// 状態区分
+					partObj["CurrentDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日時
+					break;
 				default:
 					this.message = '商品の更新が失敗しました';
 					return false;
@@ -276,6 +341,9 @@ MovementService.prototype = {
 						motoLocationCd = ( this.mode == _MODE.S ) ? this.record['ShipmentCdLU'].value : this.tableRecords[i].value['ShipmentCdLU'].value;  // 出荷先
 					}
 					break;
+				case _SILPNUM.CHANGE:
+					var motoLocationCd = ( this.mode == _MODE.S ) ? this.record['CurrentCdLU']['value'] : this.tableRecords[i].value['CurrentCdLU'].value;  // 出荷先
+					break;
 				default:
 					motoLocationCd  = ''
 					break;
@@ -299,6 +367,9 @@ MovementService.prototype = {
 					break;
 				case _SILPNUM.RETURN:
 					sakiLocationCd  = this.record['WarehouseCdLU']['value']; // 倉庫
+					break;
+				case _SILPNUM.CHANGE:
+					sakiLocationCd  = '';
 					break;
 				default:
 					sakiLocationCd  = ''

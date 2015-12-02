@@ -36,6 +36,7 @@ ItemService.prototype = {
 	getItemCd: function() {
 		// クエリー作成
 		var wQuery = 'Office in ("' + this.strOffice + '")  order by ItemCd desc limit 1';
+		
 		if (this.commonService.fncGetRecords(kintone.app.getId() , wQuery)){
 			var jsonObj = this.commonService.getJsonObj();
 			// 新規ItemCdを取得
