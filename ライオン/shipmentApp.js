@@ -78,7 +78,6 @@
 			];
     kintone.events.on(eventCreate , function (event) {
 		var commonService = new CommonService();
-
 		// スペースにテキストボックスを設置
 		kintone.app.record.getSpaceElement('BarcodeSpc').appendChild(commonService.fncGetBarcodeText());
 
@@ -97,7 +96,7 @@
 		
 		for (var i = 0; i < tableRecords.length; i++) {
 			if ((tableRecords[i].value['ItemPrice']['value'] == 0) &&
-				(tableRecords[i].value['ItemNameLU']['value']  == null)){
+				(tableRecords[i].value['Locality']['value']  == null)){
 				tableRecords[i].value['ItemCdLU']['lookup'] = true;
 			}
 		}
@@ -108,7 +107,7 @@
 	///////////////////////////////////////////////////////////////////////
 	kintone.events.on(['app.record.index.show'], function(event) {
         var appId = event.appId;
-
+		
         //ダイアログでファイルが選択された時の処理
         $('#selfile').bind('change', function(evt) {
             //読み込んだファイルをテキストエリアに表示
@@ -205,6 +204,5 @@
             return jsonArray;
         }
     });
-	
-	
+
 })();

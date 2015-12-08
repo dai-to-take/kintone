@@ -20,6 +20,7 @@ SellingService.prototype = {
 		// 変数セット
 		this.strSellingDate = record['SellingDate']['value'];
 		this.strOffice = record['Office']['value'];
+		this.strShipmentCdLU = record['ShipmentCdLU']['value'];
 		
 	},
 	
@@ -55,7 +56,7 @@ SellingService.prototype = {
 	/***************************************/
 	setRelationInfo: function(autoSellingNumber) {
 		//エラーチェック
-		if (! this.movementService.fncInputMovement(_SILPNUM.SELL)) {
+		if (! this.movementService.fncInputMovement(_SILPNUM.SELL , this.strShipmentCdLU)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}

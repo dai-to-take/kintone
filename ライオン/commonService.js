@@ -37,6 +37,12 @@ CommonService.prototype = {
 	getRecordData: function() {
 	  return this.recordData;
 	},
+	getConditionKbn: function() {
+	  return this.conditionKbn;
+	},
+	getCurrentCdLU: function() {
+	  return this.currentCdLU;
+	},
 	/***************************************/
 	/* API関連                             */
 	/***************************************/
@@ -263,6 +269,45 @@ CommonService.prototype = {
 		}
 	
 	},
+	
+	fncCurrentCheck: function(ItemCdLU) {
+		// クエリー作成
+		var wQuery = 'ItemCd = "' + ItemCdLU + '" limit 1';
+		
+		if (this.fncGetRecords(_APPID.ITEM , wQuery)){
+			var jsonObj = this.getJsonObj();
+			var obj = JSON.parse(jsonObj);
+			if (obj.records[0] != null){
+				try{
+					var strGetVal = '';
+					for ( var keyA in obj.records ) {
+						for ( var keyB in obj.records[keyA] ) {
+							if (keyB == 'CurrentCdLU'){
+								this.currentCdLU = obj.records[keyA][keyB].value;
+								
+							}else if (keyB == 'ConditionKbn'){
+								this.conditionKbn = obj.records[keyA][keyB].value;
+								
+							}
+						}
+					}
+				} catch(e){
+					this.message = '商品コードが取得できません。';
+					return false;
+				}
+			//商品コードと所在コードの組み合わせが合っているか？
+			//if (this.fncIsExistence(jsonObj)){
+				//this.message = '対象の商品が取得できました';
+				//return true;
+			}else {
+				this.message = '対象の商品が取得できません。';
+				return false;
+			}
+		}else {
+			this.message = '対象の商品が取得できません。';
+			return false;
+		}
+	},
 	/***************************************/
 	/* アプリデータの取得                  */
 	/***************************************/
@@ -362,19 +407,35 @@ CommonService.prototype = {
 		myBarcodeText.id = 'my_barcode_text';
 		myBarcodeText.name = 'my_barcode_text';
 		myBarcodeText.placeholder="バーコード専用"
+		myBarcodeText.style.imeMode = "disabled";
 		myBarcodeText.value = '';
-		myBarcodeText.onfocus = function() {
+		myBarcodeText.onfocus = function(evt) {
 			var element = document.getElementById('my_barcode_text'); 
 			element.style.backgroundColor = "#F4A460";
+			//if(element.value.length==0){
+			//	if(evt.which=="229" || evt.which=="0"){
+			//		var werrmsg="日本語入力モードになっています。英数字入力エリアです。";
+			//		alert(werrmsg);
+			//		return true;
+			//	}
+			//}
 		};
 		myBarcodeText.onblur = function() {
 			var element = document.getElementById('my_barcode_text'); 
 			element.style.backgroundColor = "#FFFFFF";
 		};
 //		myBarcodeText.oninput = function() {
+//			var element = document.getElementById('my_barcode_text'); 
+//			if(element.value.match(/[^0-9a-zA-Z]/)) {
+//				alert('半角英数字以外の文字が含まれています。');
+//				return;
+//			}
+//		};
 		myBarcodeText.onkeydown = function() {
 			// 入力都度取得
 			var element = document.getElementById('my_barcode_text'); 
+			
+			
 			if (event.keyCode == 13 && _DIGITS.ITEMLENG1 <= element.value.length && element.value.length <= _DIGITS.ITEMLENG2 ) {
 				// 商品コードと同じ桁数の場合のみテーブルに追加
 				var rec = kintone.app.record.get();

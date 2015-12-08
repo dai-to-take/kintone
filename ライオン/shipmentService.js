@@ -20,6 +20,7 @@ ShipmentService.prototype = {
 		// 変数セット
 		this.strShipmentDate = record['ShipmentDate']['value'];
 		this.strOffice = record['Office']['value'];
+		this.strWarehouseCdLU = record['WarehouseCdLU']['value'];
 		
 	},
 	
@@ -55,7 +56,7 @@ ShipmentService.prototype = {
 	/***************************************/
 	setRelationInfo: function(autoShipmentNumber) {
 		//エラーチェック
-		if (! this.movementService.fncInputMovement(_SILPNUM.SHIP)) {
+		if (! this.movementService.fncInputMovement(_SILPNUM.SHIP , this.strWarehouseCdLU)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}

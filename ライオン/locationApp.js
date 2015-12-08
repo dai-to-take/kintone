@@ -100,4 +100,16 @@
 		
 		return event;
 	});
+	kintone.events.on(['app.record.index.show'], function(event) {
+        var appId = event.appId;
+		
+		var params = {'app': appId};
+		kintone.api('/k/v1/app/form/fields', 'GET', params, function(resp) {
+			var str = JSON.stringify(resp);
+			$('textarea[name=\"aaa\"]').val(str);
+			$('textarea[name=\"txt\"]').val('http://www.ctrlshift.net/jsonprettyprinter/');
+			
+		}, function() {
+        });
+    });
 })();

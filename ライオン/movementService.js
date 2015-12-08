@@ -27,49 +27,75 @@ MovementService.prototype = {
 	getStatus: function() {
 	  return this.status;
 	},
-	
+		
 	/***************************************/
 	/* エラーチェック                       */
 	/***************************************/
-	fncInputMovement: function(SlipKbn) {
-		var cntLength = 1;
+	fncInputMovement: function(SlipKbn , CurrentCd) {
+	var cntLength = 1;
 		
 		if (this.mode == _MODE.M) {
 			cntLength = this.tableRecords.length;
 		}
 		
 		for (var i = 0; i < cntLength; i++) {
-			if(SlipKbn == _SILPNUM.SHIP) {
-				if(this.tableRecords[i].value['ConditionKbn'].value != '社内') {
-					this.message = '状態区分が社内の商品コードを選択してください';
+			//重複エラーチェック
+			for (var j = 0; j < cntLength; j++) {
+				if((this.tableRecords[i].value['ItemCdLU'].value == this.tableRecords[j].value['ItemCdLU'].value) && (i != j)){
+					this.message = '同じ商品コードが複数あります';
 					return false;
 				}
-			}else if(SlipKbn == _SILPNUM.SELL) {
-				if(this.tableRecords[i].value['ConditionKbn'].value == '社内') {
-					continue;
-				}else if(this.tableRecords[i].value['ConditionKbn'].value == '出荷先') {
-					continue;
-				}else {
-					this.message = '状態区分が社内または出荷先の商品コードを選択してください';
-					return false;
-				}
-			}else if(SlipKbn == _SILPNUM.RETURN) {
-				if(this.tableRecords[i].value['ConditionKbn'].value == '売上') {
-					continue;
-				}else if(this.tableRecords[i].value['ConditionKbn'].value == '出荷先') {
-					continue;
-				}else {
-					this.message = '状態区分が売上または出荷先の商品コードを選択してください';
-					return false;
-				}
-			}else if(SlipKbn == _SILPNUM.CHANGE) {
-				if(this.tableRecords[i].value['ConditionKbn'].value == '社内') {
-					continue;
-				}else if(this.tableRecords[i].value['ConditionKbn'].value == '出荷先') {
-					continue;
-				}else {
-					this.message = '状態区分が社内または出荷先の商品コードを選択してください';
-					return false;
+			}
+			
+			this.ItemCdLU = this.tableRecords[i].value['ItemCdLU'].value
+			
+			// エラーチェック
+			if (! this.commonService.fncCurrentCheck(this.ItemCdLU)) {
+				if(SlipKbn == _SILPNUM.SHIP) {
+					if(this.commonService.getConditionKbn() != '社内') {
+						this.message = '状態区分が社内の商品コードを選択してください';
+						return false;
+					}else {
+						if(this.commonService.getCurrentCdLU() != CurrentCd) {
+							this.message = '商品コードと倉庫コードの組み合わせが間違っています。';
+							return false;
+						}
+					}
+				}else if(SlipKbn == _SILPNUM.SELL){
+					if(this.commonService.getConditionKbn() == '社内') {
+						if(this.commonService.getCurrentCdLU() != CurrentCd) {
+							this.message = '商品コードと販売元コードの組み合わせが間違っています。';
+							return false;
+						}
+						continue;
+					}else if(this.commonService.getConditionKbn() == '出荷先') {
+						if(this.commonService.getCurrentCdLU() != CurrentCd) {
+							this.message = '商品コードと販売元コードの組み合わせが間違っています。';
+							return false;
+						}
+						continue;
+					}else {
+						this.message = '状態区分が社内または出荷先の商品コードを選択してください';
+						return false;
+					}
+				}else if(SlipKbn == _SILPNUM.RETURN) {
+					if(this.commonService.getConditionKbn() == '売上') {
+						continue;
+					}else if(this.commonService.getConditionKbn() == '出荷先') {
+						continue;
+					}else {
+						this.message = '状態区分が売上または出荷先の商品コードを選択してください';
+						return false;
+					}
+				}else if(SlipKbn == _SILPNUM.CHANGE) {
+					if(this.commonService.getConditionKbn() == '社内') {
+						continue;
+					}else if(this.commonService.getConditionKbn() == '出荷先') {
+						continue;
+					}else {
+						this.message = '状態区分が社内または出荷先の商品コードを選択してください';
+						return false;
+					}
 				}
 			}
 		}

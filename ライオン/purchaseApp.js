@@ -107,7 +107,7 @@
 		var tableRecords = record['ItemTable']['value'];
 		for (var i = 0; i < tableRecords.length; i++) {
 			if ((tableRecords[i].value['ItemPrice']['value'] == 0) &&
-				(tableRecords[i].value['ItemNameLU']['value']  == null)){
+				(tableRecords[i].value['Locality']['value']  == null)){
 				tableRecords[i].value['ItemCdLU']['lookup'] = true;
 			}
 		}

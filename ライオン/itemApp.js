@@ -114,30 +114,32 @@
     kintone.events.on('app.record.index.show', indexShow);
     function indexShow(event){
 		var elCondition = kintone.app.getFieldElements('ConditionKbn');
-
-		for (var i = 0; i < elCondition.length; i++) {
-            var record = event.records[i];
-			
-			if (record['ConditionKbn']['value'] === _CONDKBN.SELL) {
-				elCondition[i].style.color = 'red';
-				elCondition[i].style.fontWeight = 'bold';
-			} else if (record['ConditionKbn']['value'] === _CONDKBN.SHIP) {
-				elCondition[i].style.color = 'mediumorchid';
-				elCondition[i].style.fontWeight = 'bold';
-			} else if (record['ConditionKbn']['value'] === _CONDKBN.FAUL) {
-				elCondition[i].style.color = 'lightgrey';
-				elCondition[i].style.fontWeight = 'bold';
-			} else if (record['ConditionKbn']['value'] === _CONDKBN.DEL) {
-				elCondition[i].style.color = 'dimgray';
-				elCondition[i].style.fontWeight = 'bold';
-			} else if (record['ConditionKbn']['value'] === _CONDKBN.RETG) {
-				elCondition[i].style.color = 'turquoise';
-				elCondition[i].style.fontWeight = 'bold';
-			} else {
-				elCondition[i].style.color = 'limegreen';
-				elCondition[i].style.fontWeight = 'bold';
+		if (elCondition != null) {
+			for (var i = 0; i < elCondition.length; i++) {
+	            var record = event.records[i];
+				
+				if (record['ConditionKbn']['value'] === _CONDKBN.SELL) {
+					elCondition[i].style.color = 'red';
+					elCondition[i].style.fontWeight = 'bold';
+				} else if (record['ConditionKbn']['value'] === _CONDKBN.SHIP) {
+					elCondition[i].style.color = 'mediumorchid';
+					elCondition[i].style.fontWeight = 'bold';
+				} else if (record['ConditionKbn']['value'] === _CONDKBN.FAUL) {
+					elCondition[i].style.color = 'lightgrey';
+					elCondition[i].style.fontWeight = 'bold';
+				} else if (record['ConditionKbn']['value'] === _CONDKBN.DEL) {
+					elCondition[i].style.color = 'dimgray';
+					elCondition[i].style.fontWeight = 'bold';
+				} else if (record['ConditionKbn']['value'] === _CONDKBN.RETG) {
+					elCondition[i].style.color = 'turquoise';
+					elCondition[i].style.fontWeight = 'bold';
+				} else {
+					elCondition[i].style.color = 'limegreen';
+					elCondition[i].style.fontWeight = 'bold';
+				}
 			}
 		}
 
     };
+    
 })();	
