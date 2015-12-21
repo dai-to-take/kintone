@@ -1,10 +1,10 @@
-/* returnOldService.js */
+/* shipmentService.js */
 
-var returnOldService = function(record) {
+var ShipmentService = function(record) {
 	this._init(record);
 };
 
-returnOldService.prototype = {
+ShipmentService.prototype = {
 	_init: function(record) {
 		// 初期化
 		this.status = "";
@@ -18,8 +18,10 @@ returnOldService.prototype = {
 		this.movementService = new MovementService(this.record, _MODE.M);
 		
 		// 変数セット
-		this.strReturnDate = record['ReturnDate']['value'];
+		this.strShipmentDate = record['ShipmentDate']['value'];
 		this.strOffice = record['Office']['value'];
+		this.strWarehouseCdLU = record['WarehouseCdLU']['value'];
+		
 	},
 	
 	/***************************************/
@@ -33,11 +35,11 @@ returnOldService.prototype = {
 	},
 	
 	/***************************************/
-	/* 返却管理用の伝票番号採番            */
+	/* 出荷管理用の伝票番号採番            */
 	/***************************************/
-	getReturnNumber: function() {
+	getShipmentNumber: function() {
 		// API実行
-		if (this.commonService.fncMakeSlipNumber('ReturnDate' , 'ReturnNumber' , _SILPNUM.RETURN , this.strReturnDate , this.strOffice )){
+		if (this.commonService.fncMakeSlipNumber('ShipmentDate' , 'ShipmentNumber' , _SILPNUM.SHIP, this.strShipmentDate , this.strOffice )){
 			this.message = '伝票番号が取得できました';
 			return true;
 		}else {
@@ -45,28 +47,34 @@ returnOldService.prototype = {
 			return false;
 		}
 	},
-	getAutoReturnNumber: function() {
+	getAutoShipmentNumber: function() {
 		return this.commonService.getSlipNumber();
 	},
 
 	/***************************************/
 	/* 関連情報の更新                      */
 	/***************************************/
-	setRelationInfo: function(autoReturnNumber) {
+	setRelationInfo: function(autoShipmentNumber) {
+		//エラーチェック
+		if (! this.movementService.fncInputMovement(_SILPNUM.SHIP , this.strWarehouseCdLU)) {
+			this.message = this.movementService.getMessage();
+			return false;
+		}
+		
 		// 移動履歴の登録
-		if (! this.movementService.fncPostMovement(_SILPNUM.RETURN , this.strReturnDate , autoReturnNumber)) {
+		if (! this.movementService.fncPostMovement(_SILPNUM.SHIP , this.strShipmentDate , autoShipmentNumber)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
 		
 		// 在庫の更新
-		if (! this.movementService.fncPutZaiko(_SILPNUM.RETURN , this.strReturnDate)) {
+		if (! this.movementService.fncPutZaiko(_SILPNUM.SHIP , this.strShipmentDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}
 		
 		// 商品の更新
-		if (! this.movementService.fncPutItem(_SILPNUM.RETURN , this.strReturnDate)) {
+		if (! this.movementService.fncPutItem(_SILPNUM.SHIP , this.strShipmentDate)) {
 			this.message = this.movementService.getMessage();
 			return false;
 		}

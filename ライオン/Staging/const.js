@@ -46,7 +46,8 @@ var _SILPNUM = {
   'RETURN': 'R',
   'NST': 'M',
   'CHANGE': 'C',
-  'INVENT': 'T'
+  'INVENT': 'T',
+  'BULK': 'B'
 };
 Object.freeze(_SILPNUM);
 
@@ -111,9 +112,9 @@ var _LOCATIONKBN = {
 Object.freeze(_DIGITS);
 
 var _APPID = {
-  'IDO': 43,
-  'ITEM': 41,
-  'ZAIKO': 44
+  'IDO': 178,
+  'ITEM': 177,
+  'ZAIKO': 184
 };
 Object.freeze(_APPID);
 
@@ -126,10 +127,8 @@ Object.freeze(_OFFICENAME);
 
 var _USEROFFICE = {
   'to-take': _OFFICENAME.SILK,
-  'suzuki': _OFFICENAME.LION,
-  'samir': _OFFICENAME.LION,
-  'hossein': _OFFICENAME.SILK,
-  'okamoto': _OFFICENAME.SILK
+  '2sg-share': _OFFICENAME.LION,
+  'lion': _OFFICENAME.LION
 };
 Object.freeze(_USEROFFICE);
 
@@ -146,10 +145,8 @@ Object.freeze(_CUSTOMERCD);
 
 var _USERSOUKO = {
   'to-take': _SOUKOCD.SILK,
-  'suzuki': _SOUKOCD.LION,
-  'samir': _SOUKOCD.LION,
-  'hossein': _SOUKOCD.LION,
-  'okamoto': _SOUKOCD.LION
+  'lion-rugs': _SOUKOCD.LION,
+  'lion': _SOUKOCD.LION
 };
 Object.freeze(_USERSOUKO);
 

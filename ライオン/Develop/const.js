@@ -45,7 +45,8 @@ var _SILPNUM = {
   'SELL': 'S',
   'RETURN': 'R',
   'NST': 'M',
-  'CHANGE': 'C'
+  'CHANGE': 'C',
+  'INVENT': 'T'
 };
 Object.freeze(_SILPNUM);
 

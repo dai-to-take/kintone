@@ -155,7 +155,7 @@ CommonService.prototype = {
 		// クエリー作成
 		var wQuery = 'IdoDate >= "' + this.fncGetStartDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + 
 				'" and IdoDate <"' + this.fncGetEndDate(ReferenceDate).format("YYYY-MM-DD[T]HH:mm:ss[Z]") + '" order by IdoNumber desc limit 1';
-		
+
 		// API実行
 		if (this.fncGetRecords(_APPID.IDO , wQuery)){
 			var jsonObj = this.getJsonObj();

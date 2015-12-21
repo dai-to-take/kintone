@@ -42,7 +42,7 @@ MovementService.prototype = {
 			//重複エラーチェック
 			for (var j = 0; j < cntLength; j++) {
 				if((this.tableRecords[i].value['ItemCdLU'].value == this.tableRecords[j].value['ItemCdLU'].value) && (i != j)){
-					this.message = '同じ商品コードが複数あります';
+					this.message = '同一商品コードがあります[' + this.tableRecords[i].value['ItemCdLU'].value + ']';
 					return false;
 				}
 			}
@@ -52,48 +52,48 @@ MovementService.prototype = {
 			// エラーチェック
 			if (! this.commonService.fncCurrentCheck(this.ItemCdLU)) {
 				if(SlipKbn == _SILPNUM.SHIP) {
-					if(this.commonService.getConditionKbn() != '社内') {
-						this.message = '状態区分が社内の商品コードを選択してください';
+					if(this.commonService.getConditionKbn() != _CONDKBN.WHA) {
+						this.message = '状態区分が社内の商品コードを選択してください[' + this.ItemCdLU + ']';
 						return false;
 					}else {
 						if(this.commonService.getCurrentCdLU() != CurrentCd) {
-							this.message = '商品コードと倉庫コードの組み合わせが間違っています。';
+							this.message = '商品コードと倉庫コードの組み合わせが間違っています。[' + this.ItemCdLU + ']';
 							return false;
 						}
 					}
 				}else if(SlipKbn == _SILPNUM.SELL){
-					if(this.commonService.getConditionKbn() == '社内') {
+					if(this.commonService.getConditionKbn() == _CONDKBN.WHA) {
 						if(this.commonService.getCurrentCdLU() != CurrentCd) {
-							this.message = '商品コードと販売元コードの組み合わせが間違っています。';
+							this.message = '商品コードと販売元コードの組み合わせが間違っています。[' + this.ItemCdLU + ']';
 							return false;
 						}
 						continue;
-					}else if(this.commonService.getConditionKbn() == '出荷先') {
+					}else if(this.commonService.getConditionKbn() == _CONDKBN.SHIP) {
 						if(this.commonService.getCurrentCdLU() != CurrentCd) {
-							this.message = '商品コードと販売元コードの組み合わせが間違っています。';
+							this.message = '商品コードと販売元コードの組み合わせが間違っています。[' + this.ItemCdLU + ']';
 							return false;
 						}
 						continue;
 					}else {
-						this.message = '状態区分が社内または出荷先の商品コードを選択してください';
+						this.message = '状態区分が社内または出荷先の商品コードを選択してください[' + this.ItemCdLU + ']';
 						return false;
 					}
 				}else if(SlipKbn == _SILPNUM.RETURN) {
-					if(this.commonService.getConditionKbn() == '売上') {
+					if(this.commonService.getConditionKbn() == _CONDKBN.SELL) {
 						continue;
-					}else if(this.commonService.getConditionKbn() == '出荷先') {
+					}else if(this.commonService.getConditionKbn() == _CONDKBN.SHIP) {
 						continue;
 					}else {
-						this.message = '状態区分が売上または出荷先の商品コードを選択してください';
+						this.message = '状態区分が売上または出荷先の商品コードを選択してください[' + this.ItemCdLU + ']';
 						return false;
 					}
 				}else if(SlipKbn == _SILPNUM.CHANGE) {
-					if(this.commonService.getConditionKbn() == '社内') {
+					if(this.commonService.getConditionKbn() == _CONDKBN.WHA) {
 						continue;
-					}else if(this.commonService.getConditionKbn() == '出荷先') {
+					}else if(this.commonService.getConditionKbn() == _CONDKBN.SHIP) {
 						continue;
 					}else {
-						this.message = '状態区分が社内または出荷先の商品コードを選択してください';
+						this.message = '状態区分が社内または出荷先の商品コードを選択してください[' + this.ItemCdLU + ']';
 						return false;
 					}
 				}
@@ -189,7 +189,7 @@ MovementService.prototype = {
 			
 			// パラメータ作成
 			partObj["IdoNumber"] = {value: this.commonService.fncGetIdoNumber(ReferenceDate , cntNyusyutu)};	// 移動番号
-			partObj["IdoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "YYYY-MM-DD")};	// 移動日
+			partObj["IdoDate"] = {value: this.commonService.fncGetFormatDate(ReferenceDate , "")};	// 移動日
 			
 			partObj["IdoKbn"] = {value: strIdoKbn};	// 移動区分
 			partObj["IdoReason"] = {value: strIdoReason};	// 移動理由
